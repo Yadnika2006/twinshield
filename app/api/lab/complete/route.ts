@@ -1,6 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
-import { updateLabSession, updateUserXP, checkAndAwardBadges } from "@/lib/db";
+import { checkAndAwardBadges, getLabSessionForUser, updateLabSessionForUser, updateUserXP } from "@/lib/db";
+import { applyRateLimit, buildRateLimitHeaders } from "@/lib/rate-limit";
+import { InvalidJsonBodyError, parseJsonBodyWithLimit, RequestBodyTooLargeError } from "@/lib/request-body";
+import { labCompleteRequestSchema } from "@/lib/validation/schemas";
+import { getValidationDetails } from "@/lib/validation/http";
+import { ZodError } from "zod";
+
+const LAB_COMPLETE_BODY_MAX_BYTES = 8 * 1024;
+
+function getSessionUserId(session: Awaited<ReturnType<typeof getServerSession>>): string | null {
+    const user = session?.user as { id?: unknown } | undefined;
+    return typeof user?.id === "string" ? user.id : null;
+}
 
 function calculateGrade(score: number): string {
     if (score >= 90) return "S+";
@@ -12,46 +24,91 @@ function calculateGrade(score: number): string {
 }
 
 export async function POST(req: NextRequest) {
+    const rate = applyRateLimit(req, {
+        namespace: "lab-complete",
+        maxRequests: 20,
+        windowMs: 60_000,
+    });
+    const rateHeaders = buildRateLimitHeaders(rate);
+
+    if (!rate.success) {
+        return NextResponse.json(
+            { error: "Too many requests. Please try again shortly." },
+            { status: 429, headers: rateHeaders }
+        );
+    }
+
     const session = await getServerSession();
     if (!session?.user) {
-        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: rateHeaders });
     }
 
-    const userId = (session.user as { id?: string }).id;
+    const userId = getSessionUserId(session);
     if (!userId) {
-        return NextResponse.json({ error: "User ID not found in session" }, { status: 401 });
+        return NextResponse.json(
+            { error: "User ID not found in session" },
+            { status: 401, headers: rateHeaders }
+        );
     }
 
-    const { sessionId, duration, attackerScore, defenderScore, quizScore, tasksCompleted } =
-        await req.json();
+    try {
+        const body = await parseJsonBodyWithLimit(req, LAB_COMPLETE_BODY_MAX_BYTES);
+        const { sessionId, duration, attackerScore, defenderScore, quizScore, tasksCompleted } =
+            labCompleteRequestSchema.parse(body);
 
-    if (!sessionId) {
-        return NextResponse.json({ error: "sessionId is required" }, { status: 400 });
+        const existingSession = await getLabSessionForUser(sessionId, userId);
+        if (!existingSession) {
+            return NextResponse.json({ error: "Session not found" }, { status: 403, headers: rateHeaders });
+        }
+
+        if (existingSession.ended_at) {
+            return NextResponse.json(
+                { error: "Session is already completed" },
+                { status: 409, headers: rateHeaders }
+            );
+        }
+
+        const grade = calculateGrade(attackerScore);
+
+        const updated = await updateLabSessionForUser(sessionId, userId, {
+            ended_at: new Date().toISOString(),
+            duration_seconds: duration,
+            attacker_score: attackerScore,
+            defender_score: defenderScore,
+            quiz_score: quizScore,
+            tasks_completed: tasksCompleted,
+            grade,
+        });
+
+        if (!updated) {
+            return NextResponse.json({ error: "Failed to update session" }, { status: 500, headers: rateHeaders });
+        }
+
+        const updatedUser = await updateUserXP(userId, attackerScore);
+        const newLevel = updatedUser?.level ?? null;
+        const newBadges = await checkAndAwardBadges(userId, sessionId);
+
+        return NextResponse.json({ grade, newBadges, newLevel }, { headers: rateHeaders });
+    } catch (error) {
+        if (error instanceof RequestBodyTooLargeError) {
+            return NextResponse.json(
+                { error: `Payload too large (max ${LAB_COMPLETE_BODY_MAX_BYTES} bytes)` },
+                { status: 413, headers: rateHeaders }
+            );
+        }
+
+        if (error instanceof InvalidJsonBodyError) {
+            return NextResponse.json({ error: error.message }, { status: 400, headers: rateHeaders });
+        }
+
+        if (error instanceof ZodError) {
+            return NextResponse.json(
+                { error: "Invalid request payload", details: getValidationDetails(error) },
+                { status: 400, headers: rateHeaders }
+            );
+        }
+
+        console.error("Lab complete route error:", error);
+        return NextResponse.json({ error: "Unable to complete session" }, { status: 500, headers: rateHeaders });
     }
-
-    const grade = calculateGrade(attackerScore ?? 0);
-
-    // Update session record
-    const updated = await updateLabSession(sessionId, {
-        ended_at: new Date().toISOString(),
-        duration_seconds: duration ?? 0,
-        attacker_score: attackerScore ?? 0,
-        defender_score: defenderScore ?? 0,
-        quiz_score: quizScore ?? 0,
-        tasks_completed: tasksCompleted ?? 0,
-        grade,
-    });
-
-    if (!updated) {
-        return NextResponse.json({ error: "Failed to update session" }, { status: 500 });
-    }
-
-    // Award XP based on attacker score
-    const updatedUser = await updateUserXP(userId, attackerScore ?? 0);
-    const newLevel = updatedUser?.level ?? null;
-
-    // Check and award badges
-    const newBadges = await checkAndAwardBadges(userId, sessionId);
-
-    return NextResponse.json({ grade, newBadges, newLevel });
 }

@@ -298,8 +298,8 @@ export default function HomePage() {
           <div className="features-grid">
             {[
               { icon: "⚡", name: "Dual-View Lab", tag: "Core Feature", desc: "See the victim's UI and the attacker's terminal side-by-side in real time. Every command causes a visible reaction on the victim side." },
-              { icon: "🤖", name: "AI Agent System", tag: "AI Powered", desc: "MentorAI guides your attack methodology. GuardianAI defends, alerts, and coaches — both adapting to your skill level live." },
-              { icon: "🛡️", name: "SOC Simulation", tag: "Defence", desc: "GuardianAI fires real SIEM-style alerts, builds an incident timeline, and generates post-mortem reports after every session." },
+              { icon: "🤖", name: "AI Agent System", tag: "AI Powered", desc: "Mentor AI guides your attack methodology. Defense AI defends, alerts, and coaches — both adapting to your skill level live." },
+              { icon: "🛡️", name: "SOC Simulation", tag: "Defence", desc: "Defense AI fires real SIEM-style alerts, builds an incident timeline, and generates post-mortem reports after every session." },
               { icon: "🎯", name: "Scenario Library", tag: "12+ Scenarios", desc: "SQLi, phishing, ransomware, MitM, CVE exploitation — each with a realistic victim twin environment tailored to the attack type." },
               { icon: "🏆", name: "CTF Mode", tag: "Competitive", desc: "Timed challenges, stealth scoring, hidden flags. Compete solo or in red vs blue team pairs. Full leaderboard and ranking system." },
               { icon: "📊", name: "Instructor Dashboard", tag: "Education", desc: "Watch all student sessions live, assign scenarios, auto-grade with AI, and export cohort skill gap analytics as reports." },
@@ -324,15 +324,15 @@ export default function HomePage() {
             <p className="section-label">// AI Agent System</p>
             <h2 className="section-title">Two Agents. One Battlefield.</h2>
             <p style={{ color: "var(--dim)", fontSize: "0.9rem", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
-              MentorAI and GuardianAI work in opposition — creating a live
+              Mentor AI and Defense AI work in opposition — creating a live
               adversarial simulation inside every lab session.
             </p>
           </div>
           <div className="agents-grid">
-            {/* MENTORAI */}
+            {/* MENTOR AI */}
             <div className="agent-card purple">
               <span className="agent-sigil">🧠</span>
-              <div className="agent-name">MENTORAI</div>
+              <div className="agent-name">MENTOR AI</div>
               <div className="agent-role">// Cybersecurity Educator</div>
               <ul className="agent-abilities">
                 <li>Explains the psychological factors of each attack</li>
@@ -342,10 +342,10 @@ export default function HomePage() {
                 <li>Generates full post-lesson learning summaries</li>
               </ul>
             </div>
-            {/* GUARDIANAI */}
+            {/* DEFENSE AI */}
             <div className="agent-card blue-g">
               <span className="agent-sigil">🛡️</span>
-              <div className="agent-name">GUARDIANAI</div>
+              <div className="agent-name">DEFENSE AI</div>
               <div className="agent-role">// Defence Agent</div>
               <ul className="agent-abilities">
                 <li>Detects attacks and fires SIEM-style alerts</li>
@@ -373,7 +373,7 @@ export default function HomePage() {
               { num: "01", title: "Choose Scenario", desc: "Pick an attack scenario and difficulty level from the library" },
               { num: "02", title: "Lab Spins Up", desc: "A Docker sandbox creates your isolated victim twin in seconds" },
               { num: "03", title: "Attack & Observe", desc: "Run real tools in the terminal while watching the victim react live" },
-              { num: "04", title: "Get Assessed", desc: "GuardianAI generates your full incident report and skill score" },
+              { num: "04", title: "Get Assessed", desc: "Defense AI generates your full incident report and skill score" },
             ].map((s) => (
               <div className="how-step" key={s.num}>
                 <div className="step-num">{s.num}</div>

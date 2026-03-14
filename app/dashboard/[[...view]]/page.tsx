@@ -92,7 +92,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
             <div className="grid-2">
               <div className="glass-panel border-purple">
                 <div className="panel-header">
-                  <div className="title-area"><span className="icon">🧠</span><h3>MENTORAI</h3></div>
+                  <div className="title-area"><span className="icon">🧠</span><h3>MENTOR AI</h3></div>
                   <div className="status purple-pulse">● ACTIVE</div>
                 </div>
                 <div className="panel-body">
@@ -103,7 +103,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
 
               <div className="glass-panel border-blue">
                 <div className="panel-header">
-                  <div className="title-area"><span className="icon">🛡️</span><h3>GUARDIANAI</h3></div>
+                  <div className="title-area"><span className="icon">🛡️</span><h3>DEFENSE AI</h3></div>
                   <div className="status green-pulse">● STANDBY</div>
                 </div>
                 <div className="panel-body">

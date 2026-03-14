@@ -139,7 +139,10 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
     const allDone = SCENARIO ? completedTasks.length === SCENARIO.tasks.length : false;
 
     // ── Helpers ────────────────────────────────────────────────────────────────
-    const goTab = (n: number) => setActiveTab(n);
+    const goTab = (n: number) => {
+        if (n === 4 && !completedTabs.includes(3)) return;
+        setActiveTab(n);
+    };
 
     const startLab = async () => {
         setCompletedTabs((prev) => prev.includes(1) ? prev : [...prev, 1]);
@@ -216,14 +219,16 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                     ].map(([num, label]) => {
                         const isActive = activeTab === num;
                         const isCompleted = completedTabs.includes(num as number);
+                        const isLocked = num === 4 && !completedTabs.includes(3);
                         return (
                             <button
                                 key={num}
-                                className={`lab-tab-btn ${isActive ? "active" : ""} ${isCompleted && !isActive ? "completed" : ""}`}
+                                className={`lab-tab-btn ${isActive ? "active" : ""} ${isCompleted && !isActive ? "completed" : ""} ${isLocked ? "locked" : ""}`}
+                                disabled={isLocked}
                                 onClick={() => goTab(num as number)}
                             >
                                 <span className="tab-num">
-                                    {isCompleted && !isActive ? "✓ " : `0${num} `}
+                                    {isLocked ? "🔒 " : isCompleted && !isActive ? "✓ " : `0${num} `}
                                 </span>
                                 <span className="tab-label">{label}</span>
                             </button>
@@ -233,6 +238,24 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
 
                 <div className="lab-nav-right">
                     <span className="timer-display mono">⏱ {fmtTime(timer)}</span>
+                    {activeTab === 2 && (
+                        <button
+                            className="btn-next-nav"
+                            disabled={!labComplete}
+                            onClick={() => goTab(3)}
+                        >
+                            NEXT: QUIZ →
+                        </button>
+                    )}
+                    {activeTab === 3 && (
+                        <button
+                            className="btn-next-nav"
+                            disabled={!completedTabs.includes(3)}
+                            onClick={() => goTab(4)}
+                        >
+                            NEXT: TASKS →
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -297,7 +320,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                     <div className="agent-card purple-card">
                                         <div className="agent-head">
                                             <span className="agent-icon">🧠</span>
-                                            <span className="orbitron agent-name">MENTORAI</span>
+                                            <span className="orbitron agent-name">MENTOR AI</span>
                                         </div>
                                         <p>{SCENARIO.objective.mentorAI.intro}</p>
                                         <span className="agent-mode">Mode: Contextual Teaching</span>
@@ -305,7 +328,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                     <div className="agent-card green-card">
                                         <div className="agent-head">
                                             <span className="agent-icon">🛡️</span>
-                                            <span className="orbitron agent-name">GUARDIANAI</span>
+                                            <span className="orbitron agent-name">DEFENSE AI</span>
                                         </div>
                                         <p>Monitoring for suspicious activity: {SCENARIO.objective.guardianAI.redFlags[0]}</p>
                                         <span className="agent-mode">Mode: SOC Analyst</span>
@@ -314,7 +337,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                             </section>
 
                             <button className="btn-start pulse" onClick={startLab}>
-                                ▶ START LAB
+                                ▶ NEXT: START LAB
                             </button>
                         </div>
                     </div>
@@ -324,30 +347,32 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
             TAB 2 — LAB
         ════════════════════════════════ */}
                 {activeTab === 2 && (
-                    <ScenarioEngine
-                        scenarioId={SCENARIO.id}
-                        sessionId={params.sessionId}
-                        onComplete={(outcome) => {
-                            setLabComplete(true);
-                            setLabOutcome(outcome);
-                            setCompletedTabs((prev) => prev.includes(2) ? prev : [...prev, 2]);
-                        }}
-                    />
+                    <>
+                        <ScenarioEngine
+                            scenarioId={SCENARIO.id}
+                            onComplete={(outcome) => {
+                                setLabComplete(true);
+                                setLabOutcome(outcome);
+                                setCompletedTabs((prev) => prev.includes(2) ? prev : [...prev, 2]);
+                            }}
+                        />
+                    </>
                 )}
 
                 {/* ════════════════════════════════
             TAB 3 — QUIZ
         ════════════════════════════════ */}
                 {activeTab === 3 && (
-                    <QuizPanel
-                        scenarioId={SCENARIO.id}
-                        sessionId={params.sessionId}
-                        onComplete={(score) => {
-                            setQuizTotalScore(score);
-                            setCompletedTabs((prev) => prev.includes(3) ? prev : [...prev, 3]);
-                            goTab(4);
-                        }}
-                    />
+                    <>
+                        <QuizPanel
+                            scenarioId={SCENARIO.id}
+                            sessionId={dbSessionId || params.sessionId}
+                            onComplete={(score) => {
+                                setQuizTotalScore(score);
+                                setCompletedTabs((prev) => prev.includes(3) ? prev : [...prev, 3]);
+                            }}
+                        />
+                    </>
                 )}
 
                 {/* ════════════════════════════════
@@ -502,7 +527,8 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
         .lab-root {
           display: flex;
           flex-direction: column;
-          height: 100vh;
+                    height: calc(100vh - 60px);
+                    margin-top: 60px;
           width: 100vw;
           background-image: radial-gradient(rgba(0,212,255,0.08) 1px, transparent 1px);
           background-size: 22px 22px;
@@ -523,7 +549,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
           flex-shrink: 0;
           z-index: 10;
           position: sticky;
-          top: 60px; /* Sits directly below main navbar */
+                    top: 0;
         }
 
         .lab-nav-left { 
@@ -578,14 +604,60 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
             color: #00ff88;
             border-bottom-color: #00ff88;
         }
+        .lab-tab-btn.locked,
+        .lab-tab-btn:disabled {
+            color: rgba(255,255,255,0.28);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        .lab-tab-btn.locked:hover,
+        .lab-tab-btn:disabled:hover {
+            color: rgba(255,255,255,0.28);
+            background: transparent;
+            text-shadow: none;
+        }
         .tab-num { opacity: 0.7; }
 
         @media (max-width: 768px) {
             .tab-label { display: none; }
         }
 
-        .lab-nav-right { padding-right: 24px; }
+                .lab-nav-right {
+                    padding-right: 24px;
+                    display: flex;
+                    align-items: center;
+                    gap: 12px;
+                }
         .timer-display { color: #00ff88; font-size: 0.95rem; letter-spacing: 1px; }
+
+                .btn-next-nav {
+                    background: linear-gradient(90deg, #00d4ff, #00ff88);
+                    border: none;
+                    color: #050f1c;
+                    font-family: 'Orbitron', sans-serif;
+                    font-weight: 800;
+                    font-size: 0.72rem;
+                    letter-spacing: 0.04em;
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    clip-path: polygon(0 6px, 6px 0, 100% 0, 100% calc(100% - 6px), calc(100% - 6px) 100%, 0 100%);
+                    transition: transform 0.15s, box-shadow 0.15s;
+                    box-shadow: 0 0 12px rgba(0, 212, 255, 0.22);
+                }
+
+                .btn-next-nav:hover:not(:disabled) {
+                    transform: translateY(-1px);
+                    box-shadow: 0 0 16px rgba(0, 255, 136, 0.28);
+                }
+
+                .btn-next-nav:disabled {
+                    background: rgba(26, 44, 63, 0.95);
+                    color: rgba(184, 207, 224, 0.45);
+                    border: 1px solid rgba(0, 212, 255, 0.18);
+                    box-shadow: none;
+                    cursor: not-allowed;
+                    clip-path: none;
+                }
 
         /* ── TAB CONTENT SHELL ── */
         .tab-content {
@@ -1047,6 +1119,33 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
           cursor: not-allowed;
           clip-path: none;
         }
+
+                .tab-next-wrap {
+                    position: fixed;
+                    right: 24px;
+                    bottom: 24px;
+                    z-index: 40;
+                }
+
+                .btn-next-tab {
+                    background: linear-gradient(90deg, #00d4ff, #00ff88);
+                    border: none;
+                    color: #050f1c;
+                    font-family: 'Orbitron', sans-serif;
+                    font-weight: 800;
+                    font-size: 0.9rem;
+                    letter-spacing: 0.04em;
+                    padding: 12px 20px;
+                    cursor: pointer;
+                    clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+                    box-shadow: 0 0 18px rgba(0, 212, 255, 0.25);
+                    transition: transform 0.15s, box-shadow 0.15s;
+                }
+
+                .btn-next-tab:hover {
+                    transform: translateY(-1px);
+                    box-shadow: 0 0 22px rgba(0, 255, 136, 0.35);
+                }
       `}</style>
         </div>
     );

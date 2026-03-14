@@ -1,6 +1,6 @@
 import { getServerSession as _getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth-options";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 
 /**
  * Get the current NextAuth session on the server.

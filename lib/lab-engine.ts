@@ -39,6 +39,7 @@ export interface ScenarioPhase {
     agentMessages: AgentMessage[];
     decisionPoint?: DecisionPoint;
     nextPhase?: string;
+    agentContext?: string;
     progressPct: number;
 }
 

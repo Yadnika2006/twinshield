@@ -1,59 +1,185 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
+import {
+    defaultAgentSettings,
+    sanitizeAgentSettings,
+    type AgentSettings,
+} from "@/lib/agents/settings";
 
 export default function AgentConfigPage() {
-    // MentorAI Settings
-    const [mentorAIStatus, setMentorAIStatus] = useState(true);
-    const [teachingMode, setTeachingMode] = useState("contextual");
-    const [explanationDepth, setExplanationDepth] = useState(50);
-    const [mentorAIToggles, setMentorAIToggles] = useState({
-        realWorldExamples: true,
-        psychologicalContext: true,
-        postLessonSummary: true,
-        technicalDetails: false,
-    });
-    const [mentorPersonality, setMentorPersonality] = useState("friendly");
+    const defaults = sanitizeAgentSettings(defaultAgentSettings);
 
-    // GuardianAI Settings
-    const [guardianStatus, setGuardianStatus] = useState(true);
-    const [defenceMode, setDefenceMode] = useState("soc_analyst");
-    const [aggression, setAggression] = useState(40);
-    const [guardianToggles, setGuardianToggles] = useState({
-        autoBlock: true,
-        postMortem: true,
-        realtimeAlerts: true,
-        emailAlerts: false,
-        diffScaling: true,
+    // Mentor AI Settings
+    const [mentorAIStatus, setMentorAIStatus] = useState(defaults.mentor.active);
+    const [teachingMode, setTeachingMode] = useState(defaults.mentor.teachingMode);
+    const [explanationDepth, setExplanationDepth] = useState(defaults.mentor.explanationDepth);
+    const [mentorAIToggles, setMentorAIToggles] = useState({
+        ...defaults.mentor.toggles,
     });
-    const [alertSens, setAlertSens] = useState("medium");
+    const [mentorPersonality, setMentorPersonality] = useState(defaults.mentor.personality);
+
+    // Defense AI Settings
+    const [guardianStatus, setGuardianStatus] = useState(defaults.defense.active);
+    const [defenceMode, setDefenceMode] = useState(defaults.defense.defenceMode);
+    const [aggression, setAggression] = useState(defaults.defense.aggression);
+    const [guardianToggles, setGuardianToggles] = useState({
+        ...defaults.defense.toggles,
+    });
+    const [alertSens, setAlertSens] = useState(defaults.defense.alertSensitivity);
 
     const [toast, setToast] = useState<string | null>(null);
+    const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
 
     const showToast = (msg: string) => {
         setToast(msg);
         setTimeout(() => setToast(null), 3000);
     };
 
-    const handleSaveMentor = () => showToast("MentorAI config saved successfully");
-    const handleSaveGreen = () => showToast("GuardianAI config saved successfully");
+    const toSettingsPayload = (): AgentSettings => {
+        return sanitizeAgentSettings({
+            mentor: {
+                active: mentorAIStatus,
+                teachingMode,
+                explanationDepth,
+                toggles: mentorAIToggles,
+                personality: mentorPersonality,
+            },
+            defense: {
+                active: guardianStatus,
+                defenceMode,
+                aggression,
+                toggles: guardianToggles,
+                alertSensitivity: alertSens,
+            },
+        });
+    };
 
-    const resetDefaults = () => {
-        setMentorAIStatus(true);
-        setTeachingMode("contextual");
-        setExplanationDepth(50);
-        setMentorAIToggles({ realWorldExamples: true, psychologicalContext: true, postLessonSummary: true, technicalDetails: false });
-        setMentorPersonality("friendly");
+    useEffect(() => {
+        let isMounted = true;
 
-        setGuardianStatus(true);
-        setDefenceMode("soc_analyst");
-        setAggression(40);
-        setGuardianToggles({ autoBlock: true, postMortem: true, realtimeAlerts: true, emailAlerts: false, diffScaling: true });
-        setAlertSens("medium");
+        const loadSettings = async () => {
+            try {
+                const response = await fetch("/api/agents/config", { cache: "no-store" });
+                if (!response.ok) {
+                    throw new Error(`Failed to load settings (${response.status})`);
+                }
 
-        showToast("All settings reset to defaults");
+                const settings = sanitizeAgentSettings(await response.json());
+                if (!isMounted) return;
+
+                setMentorAIStatus(settings.mentor.active);
+                setTeachingMode(settings.mentor.teachingMode);
+                setExplanationDepth(settings.mentor.explanationDepth);
+                setMentorAIToggles(settings.mentor.toggles);
+                setMentorPersonality(settings.mentor.personality);
+
+                setGuardianStatus(settings.defense.active);
+                setDefenceMode(settings.defense.defenceMode);
+                setAggression(settings.defense.aggression);
+                setGuardianToggles(settings.defense.toggles);
+                setAlertSens(settings.defense.alertSensitivity);
+            } catch (error) {
+                console.error("Failed to load agent settings:", error);
+                if (isMounted) {
+                    setToast("Using default settings (failed to load saved config)");
+                    setTimeout(() => setToast(null), 3000);
+                }
+            } finally {
+                if (isMounted) setIsLoadingConfig(false);
+            }
+        };
+
+        loadSettings();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
+
+    const persistSettings = async (successMessage: string) => {
+        setIsSaving(true);
+        try {
+            const payload = toSettingsPayload();
+            const response = await fetch("/api/agents/config", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.error || `Failed to save settings (${response.status})`);
+            }
+
+            const savedSettings = sanitizeAgentSettings(await response.json());
+
+            setMentorAIStatus(savedSettings.mentor.active);
+            setTeachingMode(savedSettings.mentor.teachingMode);
+            setExplanationDepth(savedSettings.mentor.explanationDepth);
+            setMentorAIToggles(savedSettings.mentor.toggles);
+            setMentorPersonality(savedSettings.mentor.personality);
+
+            setGuardianStatus(savedSettings.defense.active);
+            setDefenceMode(savedSettings.defense.defenceMode);
+            setAggression(savedSettings.defense.aggression);
+            setGuardianToggles(savedSettings.defense.toggles);
+            setAlertSens(savedSettings.defense.alertSensitivity);
+
+            showToast(successMessage);
+        } catch (error) {
+            console.error("Failed to save agent settings:", error);
+            showToast("Failed to save config");
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleSaveMentor = () => {
+        void persistSettings("Mentor AI config saved successfully");
+    };
+
+    const handleSaveGreen = () => {
+        void persistSettings("Defense AI config saved successfully");
+    };
+
+    const resetDefaults = async () => {
+        const reset = sanitizeAgentSettings(defaultAgentSettings);
+
+        setMentorAIStatus(reset.mentor.active);
+        setTeachingMode(reset.mentor.teachingMode);
+        setExplanationDepth(reset.mentor.explanationDepth);
+        setMentorAIToggles(reset.mentor.toggles);
+        setMentorPersonality(reset.mentor.personality);
+
+        setGuardianStatus(reset.defense.active);
+        setDefenceMode(reset.defense.defenceMode);
+        setAggression(reset.defense.aggression);
+        setGuardianToggles(reset.defense.toggles);
+        setAlertSens(reset.defense.alertSensitivity);
+
+        setIsSaving(true);
+        try {
+            const response = await fetch("/api/agents/config", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(reset),
+            });
+
+            if (!response.ok) {
+                const errorBody = await response.json().catch(() => ({}));
+                throw new Error(errorBody.error || `Failed to save defaults (${response.status})`);
+            }
+
+            showToast("All settings reset to defaults");
+        } catch (error) {
+            console.error("Failed to save default settings:", error);
+            showToast("Defaults restored locally (save failed)");
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -67,18 +193,18 @@ export default function AgentConfigPage() {
                         {/* ── HEADER ── */}
                         <div className="page-header">
                             <h1 className="orbitron">◈ AGENT CONFIGURATION</h1>
-                            <p className="muted body-text">Customize how MentorAI and GuardianAI assist you during lab sessions</p>
+                            <p className="muted body-text">Customize how Mentor AI and Defense AI assist you during lab sessions</p>
                         </div>
 
                         <div className="config-grid">
 
                             {/* ════════════════════════════════
-                                 MENTORAI CONFIGURATION CARD
+                                 MENTOR AI CONFIGURATION CARD
                             ════════════════════════════════ */}
                             <div className="agent-card purple-theme">
                                 <div className="ac-header">
                                     <div className="ac-title">
-                                        <span className="orbitron ac-name purple-text">🧠 MENTORAI</span>
+                                        <span className="orbitron ac-name purple-text">🧠 MENTOR AI</span>
                                         <span className="mono ac-sub">CYBERSECURITY EDUCATOR</span>
                                     </div>
                                     <button
@@ -98,7 +224,7 @@ export default function AgentConfigPage() {
                                                 { id: 'observe', title: 'OBSERVE ONLY', desc: 'Watch the attack — no explanations shown' },
                                                 { id: 'contextual', title: 'CONTEXTUAL', desc: 'Explains each step as the attack unfolds' },
                                                 { id: 'deep_dive', title: 'DEEP DIVE', desc: 'Full technical explanations and background' },
-                                                { id: 'step_by_step', title: 'STEP BY STEP', desc: 'MentorAI guides you through everything' },
+                                                { id: 'step_by_step', title: 'STEP BY STEP', desc: 'Mentor AI guides you through everything' },
                                             ].map(opt => (
                                                 <div
                                                     key={opt.id}
@@ -186,19 +312,23 @@ export default function AgentConfigPage() {
                                 </div>
 
                                 <div className="ac-footer">
-                                    <button className="btn-save purple-grad mono" onClick={handleSaveMentor}>
-                                        SAVE MENTORAI CONFIG
+                                    <button
+                                        className="btn-save purple-grad mono"
+                                        onClick={handleSaveMentor}
+                                        disabled={isSaving || isLoadingConfig}
+                                    >
+                                        {isSaving ? 'SAVING...' : 'SAVE MENTOR AI CONFIG'}
                                     </button>
                                 </div>
                             </div>
 
                             {/* ════════════════════════════════
-                                 GUARDIANAI CONFIGURATION CARD
+                                 DEFENSE AI CONFIGURATION CARD
                             ════════════════════════════════ */}
                             <div className="agent-card green-theme">
                                 <div className="ac-header">
                                     <div className="ac-title">
-                                        <span className="orbitron ac-name green-text">🛡️ GUARDIANAI</span>
+                                        <span className="orbitron ac-name green-text">🛡️ DEFENSE AI</span>
                                         <span className="mono ac-sub">DEFENCE AGENT</span>
                                     </div>
                                     <button
@@ -241,7 +371,7 @@ export default function AgentConfigPage() {
                                             <label className="sec-label mono">AGGRESSION LEVEL</label>
                                             <span className="mono slider-val">{aggression < 30 ? 'PASSIVE' : aggression > 70 ? 'AGGRESSIVE' : 'MODERATE'}</span>
                                         </div>
-                                        <p className="sec-desc">How aggressively GuardianAI defends</p>
+                                        <p className="sec-desc">How aggressively Defense AI defends</p>
                                         <div className="slider-wrap">
                                             <span className="mono muted">PASSIVE</span>
                                             <input
@@ -307,8 +437,12 @@ export default function AgentConfigPage() {
                                 </div>
 
                                 <div className="ac-footer">
-                                    <button className="btn-save green-grad mono" onClick={handleSaveGreen}>
-                                        SAVE GUARDIANAI CONFIG
+                                    <button
+                                        className="btn-save green-grad mono"
+                                        onClick={handleSaveGreen}
+                                        disabled={isSaving || isLoadingConfig}
+                                    >
+                                        {isSaving ? 'SAVING...' : 'SAVE DEFENSE AI CONFIG'}
                                     </button>
                                 </div>
                             </div>
@@ -319,26 +453,28 @@ export default function AgentConfigPage() {
                             <h2 className="orbitron log-title">◈ RECENT AGENT ACTIVITY</h2>
                             <div className="term-panel mono">
                                 <div className="log-line">
-                                    <span className="t-time">[00:02]</span> <span className="t-purple">🧠 MENTORAI</span>     <span className="t-msg">&quot;Session started — I will explain each attack technique as it unfolds&quot;</span>
+                                    <span className="t-time">[00:02]</span> <span className="t-purple">🧠 MENTOR AI</span>     <span className="t-msg">&quot;Session started — I will explain each attack technique as it unfolds&quot;</span>
                                 </div>
                                 <div className="log-line">
-                                    <span className="t-time">[00:07]</span> <span className="t-green">🛡️ GUARDIANAI</span> <span className="t-msg">&quot;SQL injection pattern detected — alert fired to SOC panel&quot;</span>
+                                    <span className="t-time">[00:07]</span> <span className="t-green">🛡️ DEFENSE AI</span> <span className="t-msg">&quot;SQL injection pattern detected — alert fired to SOC panel&quot;</span>
                                 </div>
                                 <div className="log-line">
-                                    <span className="t-time">[00:11]</span> <span className="t-purple">🧠 MENTORAI</span>     <span className="t-msg">&quot;Good progress — SQL injection works because input is not sanitised before the query&quot;</span>
+                                    <span className="t-time">[00:11]</span> <span className="t-purple">🧠 MENTOR AI</span>     <span className="t-msg">&quot;Good progress — SQL injection works because input is not sanitised before the query&quot;</span>
                                 </div>
                                 <div className="log-line">
-                                    <span className="t-time">[00:18]</span> <span className="t-green">🛡️ GUARDIANAI</span> <span className="t-msg">&quot;Exfiltration attempt detected — outbound transfer blocked&quot;</span>
+                                    <span className="t-time">[00:18]</span> <span className="t-green">🛡️ DEFENSE AI</span> <span className="t-msg">&quot;Exfiltration attempt detected — outbound transfer blocked&quot;</span>
                                 </div>
                                 <div className="log-line">
-                                    <span className="t-time">[00:21]</span> <span className="t-purple">🧠 MENTORAI</span>     <span className="t-msg">&quot;Session complete — full lesson summary saved to your report&quot;</span>
+                                    <span className="t-time">[00:21]</span> <span className="t-purple">🧠 MENTOR AI</span>     <span className="t-msg">&quot;Session complete — full lesson summary saved to your report&quot;</span>
                                 </div>
                             </div>
                         </section>
 
                         {/* ── RESET / INFO ROW ── */}
                         <div className="reset-row mt-6">
-                            <button className="btn-reset mono" onClick={resetDefaults}>RESET ALL TO DEFAULTS</button>
+                            <button className="btn-reset mono" onClick={resetDefaults} disabled={isSaving || isLoadingConfig}>
+                                {isSaving ? 'SAVING...' : 'RESET ALL TO DEFAULTS'}
+                            </button>
                             <p className="info-txt">
                                 Settings apply to your next lab session.<br />
                                 Changes do not affect sessions in progress.
@@ -363,8 +499,8 @@ export default function AgentConfigPage() {
                     background-image: radial-gradient(rgba(0,212,255,0.05) 1px, transparent 1px);
                     background-size: 20px 20px;
                 }
-                .dashboard-content { display: flex; flex: 1; height: calc(100vh - 60px); }
-                .main-content { flex: 1; overflow-y: auto; padding: 40px; }
+                .dashboard-content { display: flex; margin-top: 60px; height: calc(100vh - 60px); }
+                .main-content { flex: 1; margin-left: 220px; overflow-y: auto; padding: 40px; }
                 .fade-in { animation: fadeIn 0.4s ease-out; max-width: 1300px; margin: 0 auto; padding-bottom: 60px; }
                 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
@@ -460,6 +596,7 @@ export default function AgentConfigPage() {
                 /* FOOTER */
                 .ac-footer { padding: 24px; border-top: 1px solid rgba(255,255,255,0.05); }
                 .btn-save { width: 100%; border: none; padding: 14px; border-radius: 6px; font-weight: bold; font-size: 1rem; cursor: pointer; color: #000; transition: box-shadow 0.2s; }
+                .btn-save:disabled { opacity: 0.6; cursor: not-allowed; box-shadow: none !important; }
                 .purple-grad { background: linear-gradient(90deg, #bb88ff, #9966ee); }
                 .purple-grad:hover { box-shadow: 0 0 15px rgba(187,136,255,0.4); }
                 .green-grad { background: linear-gradient(90deg, #00ff88, #00cc6a); }
@@ -476,6 +613,7 @@ export default function AgentConfigPage() {
                 /* RESET ROW */
                 .reset-row { display: flex; justify-content: space-between; align-items: center; border-top: 1px dashed rgba(255,255,255,0.1); padding-top: 16px; }
                 .btn-reset { background: transparent; border: none; color: rgba(255,68,68,0.7); cursor: pointer; padding: 8px 16px; border-radius: 4px; transition: 0.2s; }
+                .btn-reset:disabled { opacity: 0.6; cursor: not-allowed; }
                 .btn-reset:hover { background: rgba(255,68,68,0.1); color: #ff4444; }
                 .info-txt { font-family: 'Exo 2', sans-serif; font-size: 0.85rem; color: #777; text-align: right; margin: 0; line-height: 1.4; }
 

@@ -21,10 +21,14 @@ import AttackerTerminal from './AttackerTerminal';
 import AgentPanel, { AgentTrigger } from './AgentPanel';
 import DecisionModal   from './DecisionModal';
 import { scenarioMeta } from '@/lib/agents/scenario-metadata';
+import {
+    defaultAgentSettings,
+    sanitizeAgentSettings,
+    type AgentSettings,
+} from '@/lib/agents/settings';
 
 interface ScenarioEngineProps {
     scenarioId: string;
-    sessionId: string;
     onComplete: (outcome: LabOutcome) => void;
 }
 
@@ -50,7 +54,13 @@ function getScript(scenarioId: string): ScenarioScript | null {
     }
 }
 
-export default function ScenarioEngine({ scenarioId, sessionId, onComplete }: ScenarioEngineProps) {
+type InteractionPayload = {
+    email?: string;
+    password?: string;
+    key?: string;
+};
+
+export default function ScenarioEngine({ scenarioId, onComplete }: ScenarioEngineProps) {
     const script = getScript(scenarioId);
 
     const [currentPhaseId,   setCurrentPhaseId]   = useState<string>('');
@@ -62,6 +72,9 @@ export default function ScenarioEngine({ scenarioId, sessionId, onComplete }: Sc
     const [progress,         setProgress]         = useState<number>(0);
     const [attackPhaseName,  setAttackPhaseName]  = useState<string>('');
     const [isPlaying,        setIsPlaying]        = useState<boolean>(false);
+    const [agentSettings,    setAgentSettings]    = useState<AgentSettings>(
+        sanitizeAgentSettings(defaultAgentSettings)
+    );
 
     const timersRef      = useRef<NodeJS.Timeout[]>([]);
     const stolenCredsRef = useRef({ email: 'john.smith@corpbank.com', password: 'CorpBank2024!' });
@@ -122,7 +135,7 @@ export default function ScenarioEngine({ scenarioId, sessionId, onComplete }: Sc
         const t0 = setTimeout(() => {
             setAgentTrigger({
                 phase: phaseId,
-                event: (phase as any).agentContext || phase.name,
+                event: phase.agentContext || phase.name,
                 redFlags: meta?.redFlags || [],
                 timestamp: Date.now()
             });
@@ -135,7 +148,7 @@ export default function ScenarioEngine({ scenarioId, sessionId, onComplete }: Sc
             setIsPlaying(false);
             if (phase.decisionPoint) setShowDecision(true);
         }
-    }, [script, patchTerminalLines, scheduleTriggers, onComplete]);
+    }, [script, patchTerminalLines, scheduleTriggers, onComplete, scenarioId]);
 
     useEffect(() => {
         if (script && script.phases.length > 0) {
@@ -144,6 +157,27 @@ export default function ScenarioEngine({ scenarioId, sessionId, onComplete }: Sc
         return () => { timersRef.current.forEach(clearTimeout); };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [script]);
+
+    useEffect(() => {
+        let isMounted = true;
+
+        const loadAgentSettings = async () => {
+            try {
+                const response = await fetch('/api/agents/config', { cache: 'no-store' });
+                if (!response.ok) return;
+
+                const settings = sanitizeAgentSettings(await response.json());
+                if (isMounted) setAgentSettings(settings);
+            } catch (error) {
+                console.error('Failed to load agent settings for runtime:', error);
+            }
+        };
+
+        loadAgentSettings();
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
     const handleTerminalComplete = useCallback(() => {
         if (!script) return;
@@ -188,7 +222,7 @@ export default function ScenarioEngine({ scenarioId, sessionId, onComplete }: Sc
         }
     }, [script, currentPhaseId, startPhase, onComplete, scenarioId]);
 
-    const handleInteraction = useCallback((action: string, data?: any) => {
+    const handleInteraction = useCallback((action: string, data?: InteractionPayload) => {
         switch(action) {
             case 'open-email':
                 setVictimScreen('email-open');
@@ -239,7 +273,7 @@ export default function ScenarioEngine({ scenarioId, sessionId, onComplete }: Sc
                 startPhase('meterpreter');
                 break;
             case 'keystroke':
-                setTerminalLines(prev => [...prev, { text: `[KEY] ${data.key}`, type: 'warning', delay: 0 }]);
+                setTerminalLines(prev => [...prev, { text: `[KEY] ${data?.key ?? ''}`, type: 'warning', delay: 0 }]);
                 break;
             case 'pick-up-usb':
                 setVictimScreen('usb-inserted');
@@ -328,8 +362,8 @@ export default function ScenarioEngine({ scenarioId, sessionId, onComplete }: Sc
                         agentTrigger={agentTrigger}
                         scenarioId={scenarioId}
                         isActive={isPlaying || showDecision}
-                        teachingMode="CONTEXTUAL"
-                        socMode="SOC_ANALYST"
+                        mentorSettings={agentSettings.mentor}
+                        defenseSettings={agentSettings.defense}
                     />
                 </div>
 

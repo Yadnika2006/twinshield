@@ -173,7 +173,7 @@ export default function QuizPanel({ scenarioId, sessionId, onComplete }: Props) 
                             className="btn-continue orbitron"
                             onClick={() => onComplete(score)}
                         >
-                            CONTINUE TO TASKS →
+                            COMPLETE QUIZ ✓
                         </button>
                     </div>
                 </div>

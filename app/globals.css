@@ -1,4 +1,26 @@
+@font-face {
+  font-family: 'Orbitron';
+  src: local('Segoe UI'), local('Inter'), local('Arial');
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Share Tech Mono';
+  src: local('Segoe UI'), local('Inter'), local('Arial');
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Exo 2';
+  src: local('Segoe UI'), local('Inter'), local('Arial');
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
+  --ui-font: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   --green: #00ff88;
   --blue: #00d4ff;
   --dark-blue: #0a1628;
@@ -26,7 +48,7 @@ html {
 body {
   background: var(--dark-blue);
   color: var(--text);
-  font-family: 'Exo 2', sans-serif;
+  font-family: var(--ui-font);
   overflow-x: hidden;
   cursor: crosshair;
 }

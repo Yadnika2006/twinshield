@@ -93,7 +93,7 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                                     { time: "00:11", sev: "CRITICAL", sevColor: "#ff4444", desc: "Authentication bypassed — admin account compromised" },
                                     { time: "00:15", sev: "HIGH", sevColor: "#ff8800", desc: "Database enumeration started" },
                                     { time: "00:18", sev: "CRITICAL", sevColor: "#ff4444", desc: "Data exfiltration initiated — users table targeted" },
-                                    { time: "00:21", sev: "BLOCKED", sevColor: "#00ff88", desc: "GuardianAI blocked outbound data transfer" },
+                                    { time: "00:21", sev: "BLOCKED", sevColor: "#00ff88", desc: "Defense AI blocked outbound data transfer" },
                                     { time: "00:23", sev: "INFO", sevColor: "#00d4ff", desc: "Session ended by operator" },
                                 ].map((event, i, arr) => (
                                     <div className="tl-row" key={i}>
@@ -141,9 +141,9 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                                 </div>
                             </div>
 
-                            {/* Right: What GuardianAI did well */}
+                            {/* Right: What Defense AI did well */}
                             <div className="analysis-col green-col">
-                                <h2 className="orbitron">◈ WHAT GUARDIANAI DID WELL</h2>
+                                <h2 className="orbitron">◈ WHAT DEFENSE AI DID WELL</h2>
                                 <div className="card-stack">
                                     <div className="success-card">
                                         <div className="fc-icon">✓</div>
@@ -280,11 +280,12 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                 }
                 .dashboard-content {
                     display: flex;
-                    flex: 1;
+                    margin-top: 60px;
                     height: calc(100vh - 60px);
                 }
                 .main-content {
                     flex: 1;
+                    margin-left: 220px;
                     overflow-y: auto;
                     padding: 40px;
                 }

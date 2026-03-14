@@ -10,13 +10,13 @@ export default function SOCPanel({ sessionId }: SOCPanelProps) {
     const mentorAIFeedRef = useRef<HTMLDivElement>(null);
     const guardianFeedRef = useRef<HTMLDivElement>(null);
 
-    // Mock data for MentorAI
+    // Mock data for Mentor AI
     const mentorAIMessages = [
         { time: "00:02", text: "Session started. Watch this attack carefully — I will explain each step as it happens." },
         { time: "00:05", text: "The attacker is scanning for open ports. This is called reconnaissance — the first phase of any attack." },
     ];
 
-    // Mock data for GuardianAI
+    // Mock data for Defense AI
     const guardianAlerts = [
         { time: "00:00", level: "INFO", color: "#00d4ff", text: "Session started. Monitoring active." },
         { time: "00:03", level: "MEDIUM", color: "#ffcc00", text: "Port scan detected from terminal" },
@@ -45,9 +45,9 @@ export default function SOCPanel({ sessionId }: SOCPanelProps) {
                 fontFamily: "'Share Tech Mono', monospace",
             }}
         >
-            {/* =========================================================
-          TOP HALF — MENTORAI CARD
-      ========================================================= */}
+                        {/* =========================================================
+                    TOP HALF — MENTOR AI CARD
+            ========================================================= */}
             <div
                 style={{
                     flex: 1,
@@ -61,7 +61,7 @@ export default function SOCPanel({ sessionId }: SOCPanelProps) {
                 <div style={{ padding: "10px", borderBottom: "1px solid rgba(187, 136, 255, 0.15)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                         <span style={{ color: "#bb88ff", fontSize: "0.8rem", fontWeight: "bold", letterSpacing: "1px" }}>
-                            🧠 MENTORAI
+                            🧠 MENTOR AI
                         </span>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span className="pulse-purple" style={{
@@ -97,7 +97,7 @@ export default function SOCPanel({ sessionId }: SOCPanelProps) {
                 <div style={{ padding: "8px", borderTop: "1px solid rgba(187, 136, 255, 0.15)", display: "flex", gap: "6px" }}>
                     <input
                         type="text"
-                        placeholder="Ask MentorAI..."
+                        placeholder="Ask Mentor AI..."
                         style={{
                             flex: 1,
                             background: "rgba(0, 0, 0, 0.4)",
@@ -125,15 +125,15 @@ export default function SOCPanel({ sessionId }: SOCPanelProps) {
                 </div>
             </div>
 
-            {/* =========================================================
-          BOTTOM HALF — GUARDIANAI CARD
-      ========================================================= */}
+                        {/* =========================================================
+                    BOTTOM HALF — DEFENSE AI CARD
+            ========================================================= */}
             <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 {/* Header */}
                 <div style={{ padding: "10px", borderBottom: "1px solid rgba(0, 255, 136, 0.15)" }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "6px" }}>
                         <span style={{ color: "#00ff88", fontSize: "0.8rem", fontWeight: "bold", letterSpacing: "1px" }}>
-                            🛡️ GUARDIANAI
+                            🛡️ DEFENSE AI
                         </span>
                         <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
                             <span className="pulse-green" style={{

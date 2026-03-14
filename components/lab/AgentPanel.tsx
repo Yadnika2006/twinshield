@@ -1,6 +1,11 @@
 'use client';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { scenarioMeta } from '@/lib/agents/scenario-metadata';
+import {
+    defaultAgentSettings,
+    type DefenseAgentSettings,
+    type MentorAgentSettings,
+} from '@/lib/agents/settings';
 
 // ── Types ──────────────────────────────────────────────────────────────────────
 
@@ -24,8 +29,8 @@ interface AgentPanelProps {
     agentTrigger: AgentTrigger | null;
     scenarioId: string;
     isActive?: boolean;
-    teachingMode?: string;
-    socMode?: string;
+    mentorSettings?: MentorAgentSettings;
+    defenseSettings?: DefenseAgentSettings;
     // Legacy scripted fallback props (from ScenarioEngine)
     mentorMessages?: { agent: string; type: string; text: string }[];
     guardianMessages?: { agent: string; type: string; text: string }[];
@@ -47,8 +52,8 @@ export default function AgentPanel({
     agentTrigger,
     scenarioId,
     isActive = false,
-    teachingMode = 'CONTEXTUAL',
-    socMode = 'SOC_ANALYST',
+    mentorSettings = defaultAgentSettings.mentor,
+    defenseSettings = defaultAgentSettings.defense,
     mentorMessages: scriptedMentor = [],
     guardianMessages: scriptedGuardian = [],
 }: AgentPanelProps) {
@@ -76,7 +81,7 @@ export default function AgentPanel({
         }
     }, [guardianMessages]);
 
-    // ── Live streaming call: MentorAI ─────────────────────────────────────────
+    // ── Live streaming call: Mentor AI ─────────────────────────────────────────
     const callMentorAI = useCallback(async (trigger: AgentTrigger) => {
         const meta = scenarioMeta[scenarioId];
         if (!meta) return;
@@ -103,7 +108,8 @@ export default function AgentPanel({
                     phaseEvent: trigger.event,
                     studentDecision: trigger.studentDecision,
                     sessionHistory: mentorHistory,
-                    teachingMode
+                    teachingMode: mentorSettings.teachingMode,
+                    mentorSettings
                 })
             });
 
@@ -137,7 +143,7 @@ export default function AgentPanel({
                                 prev.map(m => m.id === msgId ? { ...m, text: fullText } : m)
                             );
                         }
-                    } catch (_) {}
+                    } catch {}
                 }
             }
 
@@ -148,22 +154,22 @@ export default function AgentPanel({
             setMentorHistory(prev => [...prev, fullText]);
 
         } catch (error) {
-            console.error('MentorAI stream error:', error);
+            console.error('Mentor AI stream error:', error);
             setAiMode('scripted');
             // Fallback to latest scripted message if available
             const fallback = scriptedMentor[scriptedMentor.length - 1];
             setMentorMessages(prev =>
                 prev.map(m => m.id === msgId ? {
                     ...m,
-                    text: fallback?.text || '[MentorAI temporarily unavailable]',
+                    text: fallback?.text || '[Mentor AI temporarily unavailable]',
                     streaming: false,
                     type: 'lesson'
                 } : m)
             );
         }
-    }, [scenarioId, mentorHistory, teachingMode, scriptedMentor]);
+    }, [scenarioId, mentorHistory, mentorSettings, scriptedMentor]);
 
-    // ── Live streaming call: GuardianAI ───────────────────────────────────────
+    // ── Live streaming call: Defense AI ───────────────────────────────────────
     const callGuardianAI = useCallback(async (trigger: AgentTrigger) => {
         const meta = scenarioMeta[scenarioId];
         if (!meta) return;
@@ -191,7 +197,8 @@ export default function AgentPanel({
                     phaseEvent: trigger.event,
                     redFlagsVisible,
                     sessionHistory: guardianHistory,
-                    socMode
+                    socMode: defenseSettings.defenceMode,
+                    defenseSettings
                 })
             });
 
@@ -225,7 +232,7 @@ export default function AgentPanel({
                                 prev.map(m => m.id === msgId ? { ...m, text: fullText } : m)
                             );
                         }
-                    } catch (_) {}
+                    } catch {}
                 }
             }
 
@@ -236,19 +243,19 @@ export default function AgentPanel({
             setGuardianHistory(prev => [...prev, fullText]);
 
         } catch (error) {
-            console.error('GuardianAI stream error:', error);
+            console.error('Defense AI stream error:', error);
             setAiMode('scripted');
             const fallback = scriptedGuardian[scriptedGuardian.length - 1];
             setGuardianMessages(prev =>
                 prev.map(m => m.id === msgId ? {
                     ...m,
-                    text: fallback?.text || '[GuardianAI temporarily unavailable]',
+                    text: fallback?.text || '[Defense AI temporarily unavailable]',
                     streaming: false,
                     type: 'tip'
                 } : m)
             );
         }
-    }, [scenarioId, guardianHistory, socMode, scriptedGuardian]);
+    }, [scenarioId, guardianHistory, defenseSettings, scriptedGuardian]);
 
     // ── Trigger effect ────────────────────────────────────────────────────────
     useEffect(() => {
@@ -259,10 +266,10 @@ export default function AgentPanel({
         // Capture trigger so closures inside timers see the correct value
         const trigger = agentTrigger;
 
-        // Fire MentorAI immediately
+        // Fire Mentor AI immediately
         callMentorAI(trigger);
 
-        // Fire GuardianAI with a small offset.
+        // Fire Defense AI with a small offset.
         // Use a persistent ref so re-renders caused by setMentorMessages
         // do NOT cancel this timeout (which would happen if we returned
         // clearTimeout from this effect).
@@ -292,10 +299,10 @@ export default function AgentPanel({
 
     return (
         <div className="agent-wrapper">
-            {/* ── MentorAI ── */}
+            {/* ── Mentor AI ── */}
             <div className="agent-half mentor-half">
                 <div className="ah-header mentor">
-                    <div className="ah-title orbitron">🧠 MENTORAI</div>
+                    <div className="ah-title orbitron">🧠 MENTOR AI</div>
                     <div className="ah-sub mono">CYBERSECURITY EDUCATOR</div>
                     <div className={`status-dot ${isActive ? 'pulse-purple' : ''}`} />
                 </div>
@@ -320,10 +327,10 @@ export default function AgentPanel({
                 </div>
             </div>
 
-            {/* ── GuardianAI ── */}
+            {/* ── Defense AI ── */}
             <div className="agent-half guardian-half">
                 <div className="ah-header guardian">
-                    <div className="ah-title orbitron">🛡️ GUARDIANAI</div>
+                    <div className="ah-title orbitron">🛡️ DEFENSE AI</div>
                     <div className="ah-sub mono">DEFENCE MENTOR</div>
                     <div className={`status-dot ${isActive ? 'pulse-green' : ''}`} />
                 </div>

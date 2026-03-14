@@ -1,5 +1,9 @@
-import { supabaseAdmin } from "@/lib/supabase";
-import { getScenario } from "@/lib/scenarios";
+import { supabaseAdmin } from "@/lib/supabase-admin";
+import {
+    defaultAgentSettings,
+    sanitizeAgentSettings,
+    type AgentSettings,
+} from "@/lib/agents/settings";
 
 // ─────────────────────────────────────────────
 // USER FUNCTIONS
@@ -87,7 +91,7 @@ export async function getUserStats(userId: string) {
             .from("leaderboard")
             .select("*");
         if (lb) {
-            const myIndex = lb.findIndex((r: any) => r.user_id === userId || r.id === userId);
+            const myIndex = lb.findIndex((r: { user_id?: string; id?: string }) => r.user_id === userId || r.id === userId);
             rank = myIndex >= 0 ? myIndex + 1 : null;
         }
     } catch {
@@ -111,6 +115,50 @@ export async function getUserStats(userId: string) {
     };
 }
 
+export async function getAgentSettings(userId: string): Promise<AgentSettings> {
+    const { data, error } = await supabaseAdmin
+        .from("agent_settings")
+        .select("config")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+    if (error) {
+        console.error("Failed to fetch agent settings:", error);
+        return sanitizeAgentSettings(defaultAgentSettings);
+    }
+
+    if (!data?.config) {
+        return sanitizeAgentSettings(defaultAgentSettings);
+    }
+
+    return sanitizeAgentSettings(data.config);
+}
+
+export async function upsertAgentSettings(userId: string, settings: unknown): Promise<AgentSettings | null> {
+    const sanitized = sanitizeAgentSettings(settings);
+
+    const { data, error } = await supabaseAdmin
+        .from("agent_settings")
+        .upsert(
+            {
+                user_id: userId,
+                config: sanitized,
+            },
+            {
+                onConflict: "user_id",
+            }
+        )
+        .select("config")
+        .maybeSingle();
+
+    if (error) {
+        console.error("Failed to save agent settings:", error);
+        return null;
+    }
+
+    return sanitizeAgentSettings(data?.config || sanitized);
+}
+
 // ─────────────────────────────────────────────
 // LAB SESSION FUNCTIONS
 // ─────────────────────────────────────────────
@@ -130,18 +178,17 @@ export async function createLabSession(userId: string, scenarioId: string) {
     return data;
 }
 
-export async function updateLabSession(
-    sessionId: string,
-    updateData: {
-        ended_at?: string;
-        duration_seconds?: number;
-        attacker_score?: number;
-        defender_score?: number;
-        quiz_score?: number;
-        tasks_completed?: number;
-        grade?: string;
-    }
-) {
+type LabSessionUpdateData = {
+    ended_at?: string;
+    duration_seconds?: number;
+    attacker_score?: number;
+    defender_score?: number;
+    quiz_score?: number;
+    tasks_completed?: number;
+    grade?: string;
+};
+
+export async function updateLabSession(sessionId: string, updateData: LabSessionUpdateData) {
     const { data, error } = await supabaseAdmin
         .from("lab_sessions")
         .update(updateData)
@@ -159,6 +206,35 @@ export async function getLabSession(sessionId: string) {
         .select("*")
         .eq("id", sessionId)
         .single();
+
+    if (error) return null;
+    return data;
+}
+
+export async function getLabSessionForUser(sessionId: string, userId: string) {
+    const { data, error } = await supabaseAdmin
+        .from("lab_sessions")
+        .select("*")
+        .eq("id", sessionId)
+        .eq("user_id", userId)
+        .maybeSingle();
+
+    if (error) return null;
+    return data;
+}
+
+export async function updateLabSessionForUser(
+    sessionId: string,
+    userId: string,
+    updateData: LabSessionUpdateData
+) {
+    const { data, error } = await supabaseAdmin
+        .from("lab_sessions")
+        .update(updateData)
+        .eq("id", sessionId)
+        .eq("user_id", userId)
+        .select()
+        .maybeSingle();
 
     if (error) return null;
     return data;
@@ -258,7 +334,7 @@ export async function checkAndAwardBadges(userId: string, sessionId: string) {
         .select("badge_id")
         .eq("user_id", userId);
 
-    const owned = new Set((existingBadges || []).map((b: any) => b.badge_id));
+    const owned = new Set((existingBadges || []).map((b: { badge_id: string }) => b.badge_id));
     const toAward: string[] = [];
 
     // FIRST_BLOOD: exactly 1 completed session
@@ -324,7 +400,7 @@ export async function getLeaderboard(limit: number = 20) {
             .select("id, name, score, level, xp")
             .order("score", { ascending: false })
             .limit(limit);
-        return (users || []).map((u: any, i: number) => ({ ...u, rank: i + 1 }));
+        return (users || []).map((u: { id: string; name: string; score: number; level: number; xp: number }, i: number) => ({ ...u, rank: i + 1 }));
     }
 
     return data || [];

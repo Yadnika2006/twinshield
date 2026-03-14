@@ -1,8 +1,7 @@
 import GoogleProvider from "next-auth/providers/google";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { SupabaseAdapter } from "@auth/supabase-adapter";
 import type { NextAuthOptions } from "next-auth";
-import { supabaseAdmin } from "@/lib/supabase";
+import { supabaseAdmin } from "@/lib/supabase-admin";
 import bcrypt from "bcryptjs";
 
 export const authOptions: NextAuthOptions = {
@@ -53,7 +52,7 @@ export const authOptions: NextAuthOptions = {
     ],
 
     callbacks: {
-        async signIn({ user, account, profile }) {
+        async signIn({ user, account }) {
             if (account?.provider === 'google') {
                 try {
                     const { error } = await supabaseAdmin
@@ -61,9 +60,12 @@ export const authOptions: NextAuthOptions = {
                         .upsert({
                             email: user.email,
                             name: user.name,
-                            avatar_url: (user as any).image || null,
-                            role: 'student'
-                        }, { onConflict: 'email' });
+                            avatar_url: (user as { image?: string }).image || null,
+                            role: 'student',
+                            xp: 0,
+                            level: 1,
+                            score: 0,
+                        }, { onConflict: 'email', ignoreDuplicates: true });
 
                     if (error) {
                         console.error("Supabase upsert error in signIn:", error);
@@ -87,7 +89,7 @@ export const authOptions: NextAuthOptions = {
             return `${baseUrl}/dashboard`;
         },
 
-        async jwt({ token, user, account }) {
+        async jwt({ token, user }) {
             if (user) {
                 try {
                     const { data: dbUser } = await supabaseAdmin
@@ -103,7 +105,7 @@ export const authOptions: NextAuthOptions = {
                         token.id = user.id;
                         token.role = "student";
                     }
-                } catch (err) {
+                } catch {
                     token.id = user.id;
                     token.role = "student";
                 }
