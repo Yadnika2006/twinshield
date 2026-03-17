@@ -1149,6 +1149,59 @@ footer {
 }
 
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   TONE-DOWN MODE (REMOVE GLOW)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+:root {
+  --glow-green: none;
+  --glow-blue: none;
+}
+
+* {
+  text-shadow: none !important;
+}
+
+[class*="glow"],
+[class*="pulse"],
+.glow,
+.glow-anim,
+.pulse,
+.pulse-dot,
+.pulse-dot-sm,
+.purple-pulse,
+.green-pulse,
+.status-dot {
+  animation: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+}
+
+[style*="pulse"],
+[style*="glow"],
+[style*="drop-shadow"] {
+  animation: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+button:hover,
+a:hover,
+.btn-start:hover,
+.btn-next-nav:hover,
+.btn-complete.ready:hover,
+.btn-action.primary:hover,
+.rec-btn:hover,
+.choice-btn.safe:hover,
+.choice-btn.unsafe:hover,
+.btn-save:hover,
+.btn-launch-big:hover,
+.nav-item:hover,
+.lab-tab-btn:hover {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    RESPONSIVE
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 @media (max-width: 768px) {
