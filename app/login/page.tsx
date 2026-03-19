@@ -3,11 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation"; // Added import
+import { signIn } from "next-auth/react";
 
 export default function LoginPage() {
   const [isLoginMode, setIsLoginMode] = useState(true);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter(); // Added useRouter initialization
+
+  useEffect(() => {
+    router.prefetch("/dashboard");
+  }, [router]);
 
   // ── Matrix Rain Animation ─────────────────────────────────────
   useEffect(() => {
@@ -65,14 +70,71 @@ export default function LoginPage() {
   }, []);
 
   // Added submit handlers
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    router.push("/dashboard");
+    const formData = new FormData(e.currentTarget);
+    const email = String(formData.get("email") || "").trim().toLowerCase();
+    const password = String(formData.get("password") || "");
+
+    const result = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      callbackUrl: "/dashboard",
+    });
+
+    if (result?.error) {
+      alert("Invalid credentials");
+      return;
+    }
+
+    window.location.href = result?.url || "/dashboard";
   };
 
-  const handleSignupSubmit = (e: React.FormEvent) => {
+  const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    router.push("/dashboard");
+    const formData = new FormData(e.currentTarget);
+    const name = String(formData.get("name") || "").trim();
+    const email = String(formData.get("email") || "").trim().toLowerCase();
+    const password = String(formData.get("password") || "");
+    const confirmPassword = String(formData.get("confirmPassword") || "");
+    const role = String(formData.get("role") || "student");
+
+    if (!name || !email || !password) {
+      alert("Please fill all required fields");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      alert("Passwords do not match");
+      return;
+    }
+
+    const registerResponse = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, email, password, role }),
+    });
+
+    const registerData = await registerResponse.json().catch(() => ({}));
+    if (!registerResponse.ok) {
+      alert(registerData?.error || "Registration failed");
+      return;
+    }
+
+    const signInResult = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+      callbackUrl: "/dashboard",
+    });
+
+    if (signInResult?.error) {
+      alert("Account created, but login failed. Please login manually.");
+      return;
+    }
+
+    window.location.href = signInResult?.url || "/dashboard";
   };
 
   return (
@@ -112,7 +174,7 @@ export default function LoginPage() {
 
               <div className="input-group">
                 <label>OPERATOR ID</label>
-                <input type="email" placeholder="agent@twinshield.net" required />
+                <input name="email" type="email" placeholder="agent@twinshield.net" required />
               </div>
 
               <div className="input-group">
@@ -120,7 +182,7 @@ export default function LoginPage() {
                   <label>ACCESS KEY</label>
                   <a href="#" className="forgot-link">Forgot password?</a>
                 </div>
-                <input type="password" placeholder="••••••••" required />
+                <input name="password" type="password" placeholder="••••••••" required />
               </div>
 
               <button type="submit" className="btn btn-login shimmer">
@@ -156,30 +218,30 @@ export default function LoginPage() {
 
               <div className="input-group">
                 <label>OPERATOR NAME</label>
-                <input type="text" placeholder="John Doe" required />
+                <input name="name" type="text" placeholder="John Doe" required />
               </div>
 
               <div className="input-group">
                 <label>OPERATOR ID</label>
-                <input type="email" placeholder="agent@twinshield.net" required />
+                <input name="email" type="email" placeholder="agent@twinshield.net" required />
               </div>
 
               {/* Grid split for passwords */}
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
                 <div className="input-group">
                   <label>ACCESS KEY</label>
-                  <input type="password" placeholder="••••••••" required />
+                  <input name="password" type="password" placeholder="••••••••" required />
                 </div>
                 <div className="input-group">
                   <label>CONFIRM KEY</label>
-                  <input type="password" placeholder="••••••••" required />
+                  <input name="confirmPassword" type="password" placeholder="••••••••" required />
                 </div>
               </div>
 
               <div className="input-group">
                 <label>ROLE</label>
-                <select required className="styled-select">
-                  <option value="" disabled selected>Select Designation...</option>
+                <select required className="styled-select" name="role" defaultValue="">
+                  <option value="" disabled>Select Designation...</option>
                   <option value="student">Student</option>
                   <option value="instructor">Instructor</option>
                   <option value="ctf">CTF Competitor</option>

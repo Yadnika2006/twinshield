@@ -7,6 +7,7 @@ import { useSession, signOut } from "next-auth/react";
 export default function Navbar() {
   const pathname = usePathname();
   const { data: session } = useSession();
+  const userRole = (session?.user as { role?: string } | undefined)?.role || "student";
 
   // Format pathname as title, e.g., /dashboard -> DASHBOARD
   const title = pathname === "/" ? "HOME" : pathname.split("/")[1].toUpperCase();
@@ -17,31 +18,31 @@ export default function Navbar() {
 
   return (
     <>
-      <header className="navbar">
-        <div className="nav-left">
-          <Link href="/dashboard" className="nav-logo">
-            <span className="logo-icon">⬡</span>
+      <header className="ts-navbar">
+        <div className="ts-nav-left">
+          <Link href="/dashboard" className="ts-nav-logo">
+            <span className="ts-logo-icon">⬡</span>
             TWINSHIELD
           </Link>
         </div>
 
-        <div className="nav-center">
-          <span className="page-title">// {title}</span>
+        <div className="ts-nav-center">
+          <span className="ts-page-title">{"// "}{title}</span>
         </div>
 
-        <div className="nav-right">
-          <span className="operator-name">{session?.user?.name || "GUEST"}</span>
-          <span className={`role-badge ${(session?.user as any)?.role || "student"}`}>
-            {((session?.user as any)?.role || "student").toUpperCase()}
+        <div className="ts-nav-right">
+          <span className="ts-operator-name">{session?.user?.name || "GUEST"}</span>
+          <span className={`ts-role-badge ${userRole}`}>
+            {userRole.toUpperCase()}
           </span>
-          <button className="btn-logout" onClick={handleLogout}>
+          <button className="ts-navbar-logout-btn" onClick={handleLogout}>
             ⏻ ESC
           </button>
         </div>
       </header>
 
       <style jsx global>{`
-        .navbar {
+        .ts-navbar {
           position: fixed;
           top: 0;
           left: 0;
@@ -56,7 +57,8 @@ export default function Navbar() {
           padding: 0 24px;
           z-index: 1000;
         }
-        .nav-logo {
+
+        .ts-nav-logo {
           font-family: 'Orbitron', sans-serif;
           font-weight: 900;
           font-size: 1.2rem;
@@ -67,27 +69,32 @@ export default function Navbar() {
           gap: 8px;
           letter-spacing: 2px;
         }
-        .logo-icon {
+
+        .ts-logo-icon {
           font-size: 1.4rem;
         }
-        .page-title {
+
+        .ts-page-title {
           font-family: 'Share Tech Mono', monospace;
           color: #6b86a0;
           font-size: 1rem;
           letter-spacing: 1px;
         }
-        .nav-right {
+
+        .ts-nav-right {
           display: flex;
           align-items: center;
           gap: 16px;
         }
-        .operator-name {
+
+        .ts-operator-name {
           font-family: 'Exo 2', sans-serif;
           font-size: 0.9rem;
           font-weight: 600;
           color: #c8e6f0;
         }
-        .role-badge {
+
+        .ts-role-badge {
           font-family: 'Share Tech Mono', monospace;
           font-size: 0.7rem;
           padding: 4px 8px;
@@ -95,17 +102,20 @@ export default function Navbar() {
           font-weight: bold;
           letter-spacing: 1px;
         }
-        .role-badge.student {
+
+        .ts-role-badge.student {
           background: rgba(0, 255, 136, 0.15);
           color: #00ff88;
           border: 1px solid rgba(0, 255, 136, 0.3);
         }
-        .role-badge.instructor {
+
+        .ts-role-badge.instructor {
           background: rgba(0, 212, 255, 0.15);
           color: #00d4ff;
           border: 1px solid rgba(0, 212, 255, 0.3);
         }
-        .btn-logout {
+
+        .ts-navbar-logout-btn {
           background: none;
           border: 1px solid rgba(255, 68, 68, 0.3);
           color: #ff4444;
@@ -116,7 +126,8 @@ export default function Navbar() {
           cursor: pointer;
           transition: all 0.2s;
         }
-        .btn-logout:hover {
+
+        .ts-navbar-logout-btn:hover {
           background: rgba(255, 68, 68, 0.1);
           border-color: #ff4444;
         }

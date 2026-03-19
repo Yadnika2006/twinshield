@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import "xterm/css/xterm.css";
 import NextAuthProvider from "@/components/providers/NextAuthProvider";
 
 export const metadata: Metadata = {
@@ -15,12 +16,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <head>
-        <link
-          rel="stylesheet"
-          href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css"
-        />
-      </head>
       <body>
         <NextAuthProvider>{children}</NextAuthProvider>
       </body>

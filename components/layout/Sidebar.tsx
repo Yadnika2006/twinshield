@@ -8,7 +8,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
 
-  const role = (session?.user as any)?.role || "student";
+  const role = (session?.user as { role?: string } | undefined)?.role || "student";
 
   const links = [
     { name: "Dashboard", path: "/dashboard", icon: "◈" },
@@ -26,54 +26,54 @@ export default function Sidebar() {
 
   return (
     <>
-      <aside className="sidebar">
-        <div className="sidebar-header">
-          <Link href="/dashboard" className="sidebar-logo">
-            <span className="logo-icon">⬡</span>
+      <aside className="ts-sidebar">
+        <div className="ts-sidebar-header">
+          <Link href="/dashboard" className="ts-sidebar-logo">
+            <span className="ts-sidebar-logo-icon">⬡</span>
             TWINSHIELD
           </Link>
 
-          <div className="operator-profile">
-            <div className="avatar-circle">
+          <div className="ts-operator-profile">
+            <div className="ts-avatar-circle">
               {session?.user?.name ? session.user.name.substring(0, 2).toUpperCase() : "OP"}
             </div>
-            <div className="operator-info">
-              <span className="op-name">{session?.user?.name || "GUEST"}</span>
-              <span className={`role-pill ${role}`}>
+            <div className="ts-operator-info">
+              <span className="ts-op-name">{session?.user?.name || "GUEST"}</span>
+              <span className={`ts-role-pill ${role}`}>
                 {role.toUpperCase()}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="side-nav">
+        <div className="ts-side-nav">
           {links.map((link) => {
             const isActive = pathname === link.path;
             return (
-              <Link key={link.name} href={link.path} className={`nav-item ${isActive ? "active" : ""}`}>
-                <span className="nav-icon">{link.icon}</span>
+              <Link key={link.name} href={link.path} className={`ts-nav-item ${isActive ? "active" : ""}`}>
+                <span className="ts-nav-icon">{link.icon}</span>
                 {link.name}
               </Link>
             );
           })}
 
           {role === "instructor" && (
-            <Link href="/instructor" className={`nav-item ${pathname === "/instructor" ? "active" : ""}`}>
-              <span className="nav-icon">◈</span>
+            <Link href="/instructor" className={`ts-nav-item ${pathname === "/instructor" ? "active" : ""}`}>
+              <span className="ts-nav-icon">◈</span>
               Instructor Panel
             </Link>
           )}
         </div>
 
-        <div className="sidebar-footer">
-          <button className="btn-logout" onClick={handleLogout}>
+        <div className="ts-sidebar-footer">
+          <button className="ts-sidebar-logout-btn" onClick={handleLogout}>
             ⏻ DISCONNECT SESSION
           </button>
         </div>
       </aside>
 
       <style jsx global>{`
-        .sidebar {
+        .ts-sidebar {
           position: fixed;
           left: 0;
           top: 0;
@@ -86,7 +86,7 @@ export default function Sidebar() {
           z-index: 1001;
         }
 
-        .sidebar-header {
+        .ts-sidebar-header {
           padding: 24px 20px;
           border-bottom: 1px solid rgba(0, 212, 255, 0.1);
           display: flex;
@@ -94,7 +94,7 @@ export default function Sidebar() {
           gap: 20px;
         }
 
-        .sidebar-logo {
+        .ts-sidebar-logo {
           font-family: 'Orbitron', sans-serif;
           font-weight: 900;
           font-size: 1.1rem;
@@ -106,13 +106,13 @@ export default function Sidebar() {
           letter-spacing: 1px;
         }
 
-        .operator-profile {
+        .ts-operator-profile {
           display: flex;
           align-items: center;
           gap: 12px;
         }
 
-        .avatar-circle {
+        .ts-avatar-circle {
           width: 40px;
           height: 40px;
           border-radius: 50%;
@@ -127,19 +127,19 @@ export default function Sidebar() {
           box-shadow: 0 0 10px rgba(0, 212, 255, 0.3);
         }
 
-        .operator-info {
+        .ts-operator-info {
           display: flex;
           flex-direction: column;
           gap: 4px;
         }
 
-        .op-name {
+        .ts-op-name {
           font-family: 'Share Tech Mono', monospace;
           font-size: 0.85rem;
           color: #fff;
         }
 
-        .role-pill {
+        .ts-role-pill {
           font-family: 'Share Tech Mono', monospace;
           font-size: 0.65rem;
           padding: 2px 8px;
@@ -148,19 +148,19 @@ export default function Sidebar() {
           font-weight: bold;
         }
 
-        .role-pill.student {
+        .ts-role-pill.student {
           background: rgba(0, 255, 136, 0.1);
           color: #00ff88;
           border: 1px solid rgba(0, 255, 136, 0.3);
         }
 
-        .role-pill.instructor {
+        .ts-role-pill.instructor {
           background: rgba(0, 212, 255, 0.1);
           color: #00d4ff;
           border: 1px solid rgba(0, 212, 255, 0.3);
         }
 
-        .side-nav {
+        .ts-side-nav {
           flex: 1;
           display: flex;
           flex-direction: column;
@@ -168,7 +168,7 @@ export default function Sidebar() {
           overflow-y: auto;
         }
 
-        .nav-item {
+        .ts-nav-item {
           display: flex;
           align-items: center;
           gap: 12px;
@@ -181,28 +181,28 @@ export default function Sidebar() {
           border-left: 3px solid transparent;
         }
 
-        .nav-item:hover {
+        .ts-nav-item:hover {
           color: #00ff88;
           background: rgba(0, 255, 136, 0.05);
           text-shadow: 0 0 8px rgba(0, 255, 136, 0.5);
         }
 
-        .nav-item.active {
+        .ts-nav-item.active {
           color: #00ff88;
           background: rgba(0, 255, 136, 0.1);
           border-left-color: #00ff88;
         }
 
-        .nav-icon {
+        .ts-nav-icon {
           font-size: 0.9rem;
         }
 
-        .sidebar-footer {
+        .ts-sidebar-footer {
           padding: 20px;
           border-top: 1px solid rgba(0, 212, 255, 0.1);
         }
 
-        .btn-logout {
+        .ts-sidebar-logout-btn {
           width: 100%;
           background: transparent;
           border: 1px solid rgba(255, 68, 68, 0.3);
@@ -216,7 +216,7 @@ export default function Sidebar() {
           text-align: center;
         }
 
-        .btn-logout:hover {
+        .ts-sidebar-logout-btn:hover {
           background: rgba(255, 68, 68, 0.1);
           border-color: #ff4444;
         }

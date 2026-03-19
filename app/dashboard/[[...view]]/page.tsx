@@ -5,6 +5,19 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 
+
+// ── Badge definitions ──
+const ALL_BADGES: { id: string; icon: string; name: string; desc: string }[] = [
+  { id: "FIRST_BLOOD", icon: "🎯", name: "First Blood", desc: "Complete your first lab" },
+  { id: "SPEED_RUN", icon: "⚡", name: "Speed Run", desc: "Complete a lab in under 15 min" },
+  { id: "DEFENDER", icon: "🛡️", name: "Defender", desc: "Get 80+ defender score" },
+  { id: "QUIZ_MASTER", icon: "🧠", name: "Quiz Ace", desc: "Score 5/5 on any quiz" },
+  { id: "PERSISTENT", icon: "🔥", name: "Persistent", desc: "Complete 5+ sessions" },
+  { id: "ELITE_HACKER", icon: "💀", name: "Elite Hacker", desc: "Complete all advanced labs" },
+  { id: "GHOST", icon: "👻", name: "Ghost", desc: "Complete a lab with 0 defender alerts" },
+  { id: "CTF_CHAMPION", icon: "🏆", name: "CTF Champion", desc: "Win a CTF event" },
+];
+
 export default function DashboardPage({ params }: { params?: { view?: string[] } }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -13,6 +26,8 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
   const [userStats, setUserStats] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [progressData, setProgressData] = useState<any>(null);
+  const [progressLoading, setProgressLoading] = useState(true);
 
   useEffect(() => {
     fetch('/api/user/stats')
@@ -25,6 +40,12 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
       .then(r => r.ok ? r.json() : [])
       .then(data => { if (Array.isArray(data)) setLeaderboard(data); })
       .catch(err => console.error("Leaderboard fetch error:", err));
+
+    fetch('/api/user/progress')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => { if (data) setProgressData(data); })
+      .catch(err => console.error("Progress fetch error:", err))
+      .finally(() => setProgressLoading(false));
   }, []);
 
 
@@ -242,16 +263,225 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
         )}
 
         {view === "progress" && (
-          <div className="dashboard-container fade-in text-center">
+          <div className="dashboard-container fade-in">
             <h1 className="orbitron section-header">◈ PROGRESS TRACKER</h1>
-            <div className="glass-panel">
-              <p className="mono">Progress Analytics module initializing...</p>
-              {/* Radar chart and level breakdown would go here */}
-              <div className="radar-placeholder">
-                <div className="pentagon"></div>
-                <p className="muted mt-4">PENTAGONAL SKILL RADAR [RECON | EXPLOIT | EXFIL | DEFENCE | STEALTH]</p>
+
+            {progressLoading ? (
+              <div className="glass-panel" style={{ textAlign: 'center', padding: 60 }}>
+                <div className="skeleton" style={{ height: 300, borderRadius: 4 }} />
+                <p className="mono" style={{ marginTop: 20, color: '#6b86a0' }}>Loading analytics...</p>
               </div>
-            </div>
+            ) : !progressData ? (
+              <div className="glass-panel" style={{ textAlign: 'center', padding: 60 }}>
+                <span style={{ fontSize: '3rem' }}>📡</span>
+                <p className="orbitron" style={{ color: '#6b86a0', marginTop: 16 }}>NO DATA AVAILABLE</p>
+                <p className="mono" style={{ color: '#4a6070', fontSize: '0.85rem' }}>Complete a lab to see your progress analytics.</p>
+              </div>
+            ) : (
+              <>
+                {/* ── ROW 1: Level & Stats ── */}
+                <div className="glass-panel stat-card">
+                  <h3 className="card-label">// LEVEL & XP</h3>
+                  <div className="level-val gradient-text">LEVEL {progressData.user.level}</div>
+                  <div className="prog-container">
+                    <div className="prog-fill" style={{ width: `${Math.min(100, (progressData.user.xp / (progressData.user.level * 100)) * 100)}%` }}></div>
+                  </div>
+                  <span className="prog-sub">{progressData.user.xp} / {progressData.user.level * 100} XP TO NEXT LEVEL</span>
+                  <div className="progress-stats-row-grid" style={{ marginTop: 20 }}>
+                    <div className="progress-stat-row">
+                      <span className="mono" style={{ color: '#6b86a0' }}>TOTAL SCORE</span>
+                      <span className="mono" style={{ color: '#00ff88' }}>{progressData.user.score} PTS</span>
+                    </div>
+                    <div className="progress-stat-row">
+                      <span className="mono" style={{ color: '#6b86a0' }}>SESSIONS</span>
+                      <span className="mono" style={{ color: '#00d4ff' }}>{progressData.totalSessions}</span>
+                    </div>
+                    <div className="progress-stat-row">
+                      <span className="mono" style={{ color: '#6b86a0' }}>AVG ATK SCORE</span>
+                      <span className="mono" style={{ color: '#00d4ff' }}>{progressData.avgAttackerScore}/100</span>
+                    </div>
+                    <div className="progress-stat-row">
+                      <span className="mono" style={{ color: '#6b86a0' }}>AVG DEF SCORE</span>
+                      <span className="mono" style={{ color: '#00ff88' }}>{progressData.avgDefenderScore}/100</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* ── ROW 2: Lab Completion Map ── */}
+                <div className="glass-panel">
+                  <h3 className="card-label" style={{ marginBottom: 20 }}>// LAB COMPLETION MAP</h3>
+                  <div className="lab-map-grid">
+                    {progressData.labMap.map((lab: any) => (
+                      <div
+                        key={lab.id}
+                        className={`lab-map-tile ${lab.status}`}
+                        onClick={() => lab.status === 'completed' ? null : router.push(`/lab/${lab.id}?scenario=${lab.id}`)}
+                      >
+                        <div className="lmt-header">
+                          <span className="lmt-name orbitron">{lab.name}</span>
+                          {lab.bestGrade && (
+                            <span className={`lmt-grade ${lab.bestGrade.startsWith('A') ? 'grade-a' : lab.bestGrade.startsWith('B') ? 'grade-b' : 'grade-c'}`}>
+                              {lab.bestGrade}
+                            </span>
+                          )}
+                        </div>
+                        <span className="lmt-type mono">{lab.type}</span>
+                        <div className="lmt-footer">
+                          <span className="lmt-diff" style={{ color: lab.diff === 'Beginner' ? '#00ff88' : lab.diff === 'Intermediate' ? '#ffcc00' : '#ff4444' }}>
+                            {lab.diff}
+                          </span>
+                          {lab.attempts > 0 ? (
+                            <span className="mono" style={{ fontSize: '0.7rem', color: '#6b86a0' }}>{lab.attempts} attempt{lab.attempts > 1 ? 's' : ''} · {lab.bestScore}/100</span>
+                          ) : (
+                            <span className="mono" style={{ fontSize: '0.7rem', color: '#4a6070' }}>Not started</span>
+                          )}
+                        </div>
+                        {lab.status === 'completed' && <div className="lmt-check">✓</div>}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* ── ROW 3: Activity Heatmap ── */}
+                <div className="glass-panel">
+                  <h3 className="card-label" style={{ marginBottom: 16 }}>// ACTIVITY HEATMAP — LAST 90 DAYS</h3>
+                  <div className="heatmap-container">
+                    {Object.entries(progressData.heatmap)
+                      .sort(([a], [b]) => a.localeCompare(b))
+                      .map(([date, count]: [string, any]) => (
+                        <div
+                          key={date}
+                          className="heatmap-cell"
+                          title={`${date}: ${count} session${count !== 1 ? 's' : ''}`}
+                          style={{
+                            background: count === 0 ? 'rgba(0,212,255,0.05)' :
+                              count === 1 ? 'rgba(0,212,255,0.25)' :
+                              count === 2 ? 'rgba(0,212,255,0.5)' :
+                              'rgba(0,212,255,0.8)',
+                          }}
+                        />
+                      ))}
+                  </div>
+                  <div className="heatmap-legend">
+                    <span className="mono" style={{ fontSize: '0.7rem', color: '#6b86a0' }}>Less</span>
+                    <div className="heatmap-cell" style={{ background: 'rgba(0,212,255,0.05)', width: 12, height: 12 }} />
+                    <div className="heatmap-cell" style={{ background: 'rgba(0,212,255,0.25)', width: 12, height: 12 }} />
+                    <div className="heatmap-cell" style={{ background: 'rgba(0,212,255,0.5)', width: 12, height: 12 }} />
+                    <div className="heatmap-cell" style={{ background: 'rgba(0,212,255,0.8)', width: 12, height: 12 }} />
+                    <span className="mono" style={{ fontSize: '0.7rem', color: '#6b86a0' }}>More</span>
+                  </div>
+                </div>
+
+                {/* ── ROW 4: Badge Collection ── */}
+                <div className="glass-panel">
+                  <h3 className="card-label" style={{ marginBottom: 20 }}>// BADGE COLLECTION</h3>
+                  <div className="badge-grid">
+                    {ALL_BADGES.map(badge => {
+                      const earned = progressData.badges.find((b: any) => b.badge_id === badge.id);
+                      return (
+                        <div key={badge.id} className={`badge-tile ${earned ? 'earned' : 'locked'}`}>
+                          <span className="bt-icon">{badge.icon}</span>
+                          <div className="bt-info">
+                            <span className="bt-name orbitron">{badge.name}</span>
+                            <span className="bt-desc mono">{badge.desc}</span>
+                            {earned && <span className="bt-date mono">EARNED {new Date(earned.earned_at).toLocaleDateString()}</span>}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                {/* ── ROW 5: Strengths & Weaknesses ── */}
+                <div className="progress-sw-grid">
+                  <div className="glass-panel sw-panel">
+                    <h3 className="card-label" style={{ color: '#00ff88' }}>// STRENGTHS ▲</h3>
+                    {progressData.strengths.length > 0 ? progressData.strengths.map((s: any, i: number) => (
+                      <div key={i} className="sw-row">
+                        <div className="sw-rank" style={{ color: '#00ff88' }}>#{i + 1}</div>
+                        <div className="sw-info">
+                          <span className="orbitron" style={{ fontSize: '0.85rem' }}>{s.name}</span>
+                          <span className="mono" style={{ fontSize: '0.75rem', color: '#6b86a0' }}>{s.type}</span>
+                        </div>
+                        <div className="sw-score mono" style={{ color: '#00ff88' }}>{s.avgScore}/100</div>
+                      </div>
+                    )) : (
+                      <p className="mono" style={{ color: '#4a6070', fontSize: '0.85rem' }}>Complete labs to see strengths</p>
+                    )}
+                  </div>
+                  <div className="glass-panel sw-panel">
+                    <h3 className="card-label" style={{ color: '#ff4444' }}>// WEAKNESSES ▼</h3>
+                    {progressData.weaknesses.length > 0 ? progressData.weaknesses.map((s: any, i: number) => (
+                      <div key={i} className="sw-row">
+                        <div className="sw-rank" style={{ color: '#ff4444' }}>#{i + 1}</div>
+                        <div className="sw-info">
+                          <span className="orbitron" style={{ fontSize: '0.85rem' }}>{s.name}</span>
+                          <span className="mono" style={{ fontSize: '0.75rem', color: '#6b86a0' }}>{s.type}</span>
+                        </div>
+                        <div className="sw-score mono" style={{ color: '#ff4444' }}>{s.avgScore}/100</div>
+                      </div>
+                    )) : (
+                      <p className="mono" style={{ color: '#4a6070', fontSize: '0.85rem' }}>Complete labs to see weaknesses</p>
+                    )}
+                  </div>
+                </div>
+
+                {/* ── ROW 6: Session History Table ── */}
+                <div className="glass-panel">
+                  <h3 className="card-label" style={{ marginBottom: 20 }}>// SESSION HISTORY</h3>
+                  {progressData.sessions.length > 0 ? (
+                    <div style={{ overflowX: 'auto' }}>
+                      <table className="lb-table">
+                        <thead>
+                          <tr>
+                            <th>LAB</th>
+                            <th>DATE</th>
+                            <th>DURATION</th>
+                            <th>ATK SCORE</th>
+                            <th>DEF SCORE</th>
+                            <th>QUIZ</th>
+                            <th>GRADE</th>
+                            <th>ACTION</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {progressData.sessions.map((s: any) => (
+                            <tr key={s.id}>
+                              <td style={{ fontFamily: "'Orbitron', sans-serif", fontSize: '0.8rem' }}>{s.scenario_id}</td>
+                              <td>{new Date(s.started_at).toLocaleDateString()}</td>
+                              <td>{s.duration_seconds ? `${Math.floor(s.duration_seconds / 60)}:${String(s.duration_seconds % 60).padStart(2, '0')}` : '—'}</td>
+                              <td>
+                                <div className="mini-bar-container">
+                                  <div className="mini-bar-fill" style={{ width: `${s.attacker_score || 0}%`, background: '#00d4ff' }}></div>
+                                </div>
+                                <span>{s.attacker_score ?? '—'}</span>
+                              </td>
+                              <td>
+                                <div className="mini-bar-container">
+                                  <div className="mini-bar-fill" style={{ width: `${s.defender_score || 0}%`, background: '#00ff88' }}></div>
+                                </div>
+                                <span>{s.defender_score ?? '—'}</span>
+                              </td>
+                              <td>{s.quiz_score ?? '—'}/5</td>
+                              <td>
+                                <span className={`grade-pill ${s.grade?.startsWith('A') ? 'grade-a' : s.grade?.startsWith('B') ? 'grade-b' : 'grade-c'}`}>
+                                  {s.grade || '—'}
+                                </span>
+                              </td>
+                              <td>
+                                <button className="btn-report" onClick={() => router.push(`/report/${s.id}`)}>VIEW →</button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <p className="mono" style={{ color: '#4a6070', textAlign: 'center', padding: 30 }}>No sessions yet. Launch a lab!</p>
+                  )}
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -287,8 +517,8 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
 
       </div>
 
-      <style jsx global>{`
-        body { background: #0a1628; margin: 0; padding: 0; color: #fff; font-family: 'Exo 2', sans-serif; overflow: hidden; }
+      <style jsx>{`
+        :global(body) { background: #0a1628; margin: 0; padding: 0; color: #fff; font-family: 'Exo 2', sans-serif; overflow: hidden; }
         .orbitron { font-family: 'Orbitron', sans-serif; }
         .mono { font-family: 'Share Tech Mono', monospace; }
         .layout { display: flex; width: 100vw; height: 100vh; overflow: hidden; }
@@ -407,8 +637,65 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
         .lb-table tr.highlight { background: rgba(0, 255, 136, 0.1); color: #00ff88; font-weight: bold; }
         .pulse-dot-sm { color: #00ff88; animation: pulse 2s infinite; font-size: 0.7rem; }
 
-        .radar-placeholder { height: 300px; display: flex; flex-direction: column; align-items: center; justify-content: center; }
-        .pentagon { width: 150px; height: 150px; background: rgba(0, 212, 255, 0.1); border: 2px solid #00d4ff; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }
+        /* ─── PROGRESS PAGE STYLES ─── */
+        .progress-stats-row-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .progress-stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+
+        /* Lab Map */
+        .lab-map-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; }
+        .lab-map-tile {
+          background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.08); border-radius: 4px; padding: 14px;
+          display: flex; flex-direction: column; gap: 6px; position: relative; transition: all 0.3s; cursor: pointer;
+        }
+        .lab-map-tile.completed { border-color: rgba(0,255,136,0.3); }
+        .lab-map-tile.completed:hover { border-color: #00ff88; box-shadow: 0 0 12px rgba(0,255,136,0.2); }
+        .lab-map-tile.not_started { opacity: 0.5; }
+        .lab-map-tile.not_started:hover { opacity: 0.8; border-color: rgba(0,212,255,0.3); }
+        .lmt-header { display: flex; justify-content: space-between; align-items: center; }
+        .lmt-name { font-size: 0.75rem; font-weight: bold; }
+        .lmt-grade { font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: bold; }
+        .grade-a { background: rgba(0,255,136,0.2); color: #00ff88; }
+        .grade-b { background: rgba(0,212,255,0.2); color: #00d4ff; }
+        .grade-c { background: rgba(255,68,68,0.2); color: #ff4444; }
+        .lmt-type { font-size: 0.65rem; color: #6b86a0; }
+        .lmt-footer { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
+        .lmt-diff { font-size: 0.6rem; font-family: 'Share Tech Mono', monospace; }
+        .lmt-check { position: absolute; top: 8px; right: 8px; color: #00ff88; font-size: 0.7rem; font-weight: bold; }
+
+        /* Activity Heatmap */
+        .heatmap-container { display: flex; flex-wrap: wrap; gap: 3px; }
+        .heatmap-cell { width: 10px; height: 10px; border-radius: 2px; }
+        .heatmap-legend { display: flex; align-items: center; gap: 4px; margin-top: 12px; }
+
+        /* Badge Grid */
+        .badge-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        .badge-tile {
+          display: flex; align-items: center; gap: 14px; padding: 16px; border-radius: 6px;
+          background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.08); transition: 0.3s;
+        }
+        .badge-tile.earned { border-color: rgba(0,255,136,0.3); background: rgba(0,255,136,0.03); }
+        .badge-tile.earned:hover { box-shadow: 0 0 12px rgba(0,255,136,0.2); }
+        .badge-tile.locked { opacity: 0.4; filter: grayscale(0.8); }
+        .bt-icon { font-size: 2rem; min-width: 40px; text-align: center; }
+        .bt-info { display: flex; flex-direction: column; gap: 2px; }
+        .bt-name { font-size: 0.8rem; }
+        .bt-desc { font-size: 0.7rem; color: #6b86a0; }
+        .bt-date { font-size: 0.65rem; color: #00ff88; margin-top: 4px; }
+
+        /* Strengths & Weaknesses */
+        .progress-sw-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+        .sw-panel { display: flex; flex-direction: column; gap: 12px; }
+        .sw-row { display: flex; align-items: center; gap: 12px; padding: 10px; background: rgba(0,0,0,0.2); border-radius: 4px; }
+        .sw-rank { font-family: 'Orbitron', sans-serif; font-size: 1.2rem; font-weight: bold; min-width: 40px; text-align: center; }
+        .sw-info { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+        .sw-score { font-size: 0.9rem; font-weight: bold; }
+
+        /* Mini bar in session table */
+        .mini-bar-container { width: 60px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-bottom: 4px; overflow: hidden; }
+        .mini-bar-fill { height: 100%; border-radius: 2px; }
+
+        /* Grade pill */
+        .grade-pill { padding: 3px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: bold; }
       `}</style>
     </div>
   );

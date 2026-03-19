@@ -513,8 +513,6 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
 
             {/* ─────────────────── STYLES ─────────────────── */}
             <style jsx global>{`
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
-
         body {
           background: #0a1628;
           margin: 0; padding: 0;

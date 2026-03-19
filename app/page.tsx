@@ -9,6 +9,10 @@ export default function HomePage() {
   const router = useRouter();
   const [isLoginMode, setIsLoginMode] = useState(true);
 
+  useEffect(() => {
+    router.prefetch("/dashboard");
+  }, [router]);
+
   // Form states
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -85,7 +89,11 @@ export default function HomePage() {
       setError("Invalid credentials");
       setIsLoading(false);
     } else {
-      router.push("/dashboard");
+      if (result?.url) {
+        window.location.href = result.url;
+      } else {
+        window.location.href = "/dashboard";
+      }
     }
   };
 
@@ -129,7 +137,11 @@ export default function HomePage() {
         setIsLoginMode(true);
         setIsLoading(false);
       } else {
-        router.push("/dashboard");
+        if (result?.url) {
+          window.location.href = result.url;
+        } else {
+          window.location.href = "/dashboard";
+        }
       }
     } catch (err: any) {
       setError(err.message || "An error occurred during registration");
