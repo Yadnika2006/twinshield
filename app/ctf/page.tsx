@@ -2,15 +2,102 @@
 
 import Sidebar from "@/components/layout/Sidebar";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { scenarios } from "@/lib/scenarios";
+
+interface LeaderboardEntry {
+    id?: string;
+    user_id?: string;
+    name?: string;
+    score?: number;
+    level?: number;
+    rank?: number;
+    total_sessions?: number;
+}
+
+interface UserStats {
+    totalSessions: number;
+    totalScore: number;
+    level: number;
+    xp: number;
+    rank: number | null;
+    recentSessions: {
+        id: string;
+        scenario_id: string;
+        started_at: string;
+        ended_at: string | null;
+        grade?: string;
+    }[];
+}
 
 export default function CtfPage() {
     const router = useRouter();
+    const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+    const [userStats, setUserStats] = useState<UserStats | null>(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        async function fetchData() {
+            try {
+                const [lbRes, statsRes] = await Promise.all([
+                    fetch("/api/leaderboard"),
+                    fetch("/api/user/stats"),
+                ]);
+                if (lbRes.ok) {
+                    const lbData = await lbRes.json();
+                    setLeaderboard(lbData);
+                }
+                if (statsRes.ok) {
+                    const statsData = await statsRes.json();
+                    setUserStats(statsData);
+                }
+            } catch (e) {
+                console.error("Failed to fetch CTF data:", e);
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, []);
 
     const activeChallenges = [
-        { id: "loginbreaker", name: "LoginBreaker", cat: "SQLi", diff: "Easy", pts: 100, solves: 47, diffColor: "#00ff88" },
-        { id: "cookiemonster", name: "CookieMonster", cat: "Session Hijack", diff: "Medium", pts: 200, solves: 12, diffColor: "#ffcc00", time: "45:00" },
-        { id: "phishmaster", name: "PhishMaster", cat: "Phishing", diff: "Easy", pts: 150, solves: 89, diffColor: "#00ff88" },
+        { id: "sqli-01", name: "LoginBreaker", cat: "SQLi", diff: "Easy", pts: 100, solves: 47, diffColor: "#00ff88" },
+        { id: "sess-01", name: "CookieMonster", cat: "Session Hijack", diff: "Medium", pts: 200, solves: 12, diffColor: "#ffcc00", time: "45:00" },
+        { id: "phish-01", name: "PhishMaster", cat: "Phishing", diff: "Easy", pts: 150, solves: 89, diffColor: "#00ff88" },
     ];
+
+    // Derive completed scenario IDs from recent sessions
+    const completedScenarioIds = new Set(
+        (userStats?.recentSessions || [])
+            .filter(s => s.ended_at)
+            .map(s => s.scenario_id)
+    );
+
+    // Build flags from completed sessions mapped to scenarios
+    const capturedFlags = (userStats?.recentSessions || [])
+        .filter(s => s.ended_at)
+        .map(s => {
+            const scenario = scenarios.find(sc => sc.id === s.scenario_id);
+            return {
+                name: scenario?.name || s.scenario_id,
+                date: s.ended_at ? new Date(s.ended_at).toLocaleDateString("en-US", { month: "short", day: "2-digit" }) : "",
+            };
+        });
+
+    const totalScenarios = scenarios.length;
+    const flagsCount = completedScenarioIds.size;
+
+    function timeAgo(dateStr: string | undefined): string {
+        if (!dateStr) return "—";
+        const diff = Date.now() - new Date(dateStr).getTime();
+        const mins = Math.floor(diff / 60000);
+        if (mins < 1) return "Just now";
+        if (mins < 60) return `${mins}m ago`;
+        const hrs = Math.floor(mins / 60);
+        if (hrs < 24) return `${hrs}h ago`;
+        const days = Math.floor(hrs / 24);
+        return `${days}d ago`;
+    }
 
     return (
         <div className="layout">
@@ -25,9 +112,9 @@ export default function CtfPage() {
                             <span className="subtitle">Capture The Flag — Competitive Mode</span>
                         </div>
                         <div className="h-stats">
-                            <div className="stat"><span>FLAGS</span> <b>3/12</b></div>
-                            <div className="stat"><span>RANK</span> <b>#7</b></div>
-                            <div className="stat highlight"><span>PTS</span> <b>680</b></div>
+                            <div className="stat"><span>FLAGS</span> <b>{loading ? "—" : `${flagsCount}/${totalScenarios}`}</b></div>
+                            <div className="stat"><span>RANK</span> <b>{loading ? "—" : userStats?.rank ? `#${userStats.rank}` : "—"}</b></div>
+                            <div className="stat highlight"><span>PTS</span> <b>{loading ? "—" : userStats?.totalScore ?? 0}</b></div>
                         </div>
                     </div>
 
@@ -55,38 +142,52 @@ export default function CtfPage() {
                     <div className="grid-2 mt-4">
                         <section className="glass-panel">
                             <h2 className="section-title">◈ LEADERBOARD</h2>
-                            <table className="lb-table">
-                                <thead><tr><th>Rank</th><th>Operator</th><th>Flags</th><th>Points</th><th>Last Solve</th></tr></thead>
-                                <tbody>
-                                    <tr><td>1</td><td>OP_042</td><td>8</td><td>840</td><td>10m ago</td></tr>
-                                    <tr><td>2</td><td>OP_017</td><td>6</td><td>720</td><td>1h ago</td></tr>
-                                    <tr className="highlight"><td>3</td><td>OP_001</td><td>3</td><td>680</td><td>Just now</td></tr>
-                                    <tr><td>4</td><td>OP_109</td><td>3</td><td>540</td><td>2h ago</td></tr>
-                                    <tr><td>5</td><td>OP_088</td><td>2</td><td>490</td><td>5h ago</td></tr>
-                                    <tr><td>6</td><td>OP_212</td><td>2</td><td>320</td><td>1d ago</td></tr>
-                                    <tr><td>7</td><td>OP_011</td><td>1</td><td>100</td><td>1d ago</td></tr>
-                                </tbody>
-                            </table>
+                            {loading ? (
+                                <div className="lb-loading">Loading leaderboard...</div>
+                            ) : leaderboard.length === 0 ? (
+                                <div className="lb-loading">No leaderboard data yet. Complete labs to earn points!</div>
+                            ) : (
+                                <table className="lb-table">
+                                    <thead><tr><th>Rank</th><th>Operator</th><th>Level</th><th>Points</th></tr></thead>
+                                    <tbody>
+                                        {leaderboard.slice(0, 10).map((entry, i) => {
+                                            const rank = entry.rank || i + 1;
+                                            const isCurrentUser = userStats && (entry.user_id === undefined || entry.score === userStats.totalScore);
+                                            return (
+                                                <tr key={entry.id || entry.user_id || i} className={rank === userStats?.rank ? "highlight" : ""}>
+                                                    <td>{rank}</td>
+                                                    <td>{entry.name || `OP_${String(rank).padStart(3, "0")}`}</td>
+                                                    <td>Lv.{entry.level || 1}</td>
+                                                    <td>{entry.score || 0}</td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            )}
                         </section>
 
                         <section className="glass-panel">
                             <h2 className="section-title">◈ YOUR FLAGS</h2>
                             <div className="flag-grid">
-                                <div className="flag-card captured">
-                                    <span className="f-icon">🏁</span>
-                                    <div className="f-info"><h4>CorpBank DB Flag</h4><span>100 pts • Today</span></div>
-                                </div>
-                                <div className="flag-card captured">
-                                    <span className="f-icon">🏁</span>
-                                    <div className="f-info"><h4>CEO Password</h4><span>250 pts • Mar 06</span></div>
-                                </div>
-                                <div className="flag-card captured">
-                                    <span className="f-icon">🏁</span>
-                                    <div className="f-info"><h4>SSH Key Exfil</h4><span>330 pts • Mar 01</span></div>
-                                </div>
-                                <div className="flag-card locked"><span>🔒</span> <h4>Locked</h4></div>
-                                <div className="flag-card locked"><span>🔒</span> <h4>Locked</h4></div>
-                                <div className="flag-card locked"><span>🔒</span> <h4>Locked</h4></div>
+                                {loading ? (
+                                    <div className="lb-loading" style={{ gridColumn: "1/-1" }}>Loading...</div>
+                                ) : capturedFlags.length === 0 ? (
+                                    <div className="lb-loading" style={{ gridColumn: "1/-1" }}>No flags captured yet. Complete labs to earn flags!</div>
+                                ) : (
+                                    <>
+                                        {capturedFlags.map((flag, i) => (
+                                            <div className="flag-card captured" key={i}>
+                                                <span className="f-icon">🏁</span>
+                                                <div className="f-info"><h4>{flag.name}</h4><span>{flag.date}</span></div>
+                                            </div>
+                                        ))}
+                                        {/* Show locked slots for remaining scenarios */}
+                                        {Array.from({ length: Math.max(0, totalScenarios - capturedFlags.length) }).slice(0, 3).map((_, i) => (
+                                            <div className="flag-card locked" key={`locked-${i}`}><span>🔒</span> <h4>Locked</h4></div>
+                                        ))}
+                                    </>
+                                )}
                             </div>
                         </section>
                     </div>
@@ -145,6 +246,7 @@ export default function CtfPage() {
         .lb-table td { padding: 12px 10px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .lb-table tr.highlight { background: rgba(255,68,68,0.1); border-left: 3px solid #ff4444; }
         .lb-table tr.highlight td { color: #ff8888; font-weight: bold; text-shadow: 0 0 5px rgba(255,68,68,0.3); }
+        .lb-loading { font-family: 'Share Tech Mono'; font-size: 0.9rem; color: #6b86a0; padding: 20px 0; text-align: center; }
 
         /* FLAGS */
         .flag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
