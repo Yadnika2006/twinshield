@@ -105,6 +105,15 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
         const answer = (taskAnswers[taskId] || '').trim();
         if (!answer) return;
         setTaskLoading(taskId);
+
+        // Local validation helper
+        const localCheck = () => {
+            const task = SCENARIO?.tasks.find(t => t.id === taskId);
+            const expected = (task?.expectedAnswer || '').trim().toLowerCase();
+            const submitted = answer.toLowerCase();
+            return submitted === expected || submitted.includes(expected) || expected.includes(submitted);
+        };
+
         if (dbSessionId) {
             try {
                 const res = await fetch('/api/lab/task', {
@@ -112,25 +121,28 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ sessionId: dbSessionId, scenarioId: SCENARIO?.id, taskId, type: 'question', answer }),
                 });
-                const data = await res.json();
-                if (data.correct) {
-                    setTaskCorrect(prev => ({ ...prev, [taskId]: true }));
-                    markTaskDone(taskId, data.xpAwarded);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.correct) {
+                        setTaskCorrect(prev => ({ ...prev, [taskId]: true }));
+                        markTaskDone(taskId, data.xpAwarded);
+                    } else {
+                        setTaskCorrect(prev => ({ ...prev, [taskId]: false }));
+                        setWrongAttempts(prev => ({ ...prev, [taskId]: (prev[taskId] || 0) + 1 }));
+                    }
                 } else {
-                    setTaskCorrect(prev => ({ ...prev, [taskId]: false }));
-                    setWrongAttempts(prev => ({ ...prev, [taskId]: (prev[taskId] || 0) + 1 }));
+                    // API error (session not found, etc.) — fall back to local check
+                    if (localCheck()) { setTaskCorrect(prev => ({ ...prev, [taskId]: true })); markTaskDone(taskId); }
+                    else { setTaskCorrect(prev => ({ ...prev, [taskId]: false })); setWrongAttempts(prev => ({ ...prev, [taskId]: (prev[taskId] || 0) + 1 })); }
                 }
             } catch {
-                // Fallback: local check
-                const task = SCENARIO?.tasks.find(t => t.id === taskId);
-                const correct = answer.toLowerCase() === (task?.expectedAnswer || '').trim().toLowerCase();
-                if (correct) { setTaskCorrect(prev => ({ ...prev, [taskId]: true })); markTaskDone(taskId); }
+                // Network error — fall back to local check
+                if (localCheck()) { setTaskCorrect(prev => ({ ...prev, [taskId]: true })); markTaskDone(taskId); }
                 else { setTaskCorrect(prev => ({ ...prev, [taskId]: false })); setWrongAttempts(prev => ({ ...prev, [taskId]: (prev[taskId] || 0) + 1 })); }
             }
         } else {
-            const task = SCENARIO?.tasks.find(t => t.id === taskId);
-            const correct = answer.toLowerCase() === (task?.expectedAnswer || '').trim().toLowerCase();
-            if (correct) { setTaskCorrect(prev => ({ ...prev, [taskId]: true })); markTaskDone(taskId); }
+            // No DB session — local check only
+            if (localCheck()) { setTaskCorrect(prev => ({ ...prev, [taskId]: true })); markTaskDone(taskId); }
             else { setTaskCorrect(prev => ({ ...prev, [taskId]: false })); setWrongAttempts(prev => ({ ...prev, [taskId]: (prev[taskId] || 0) + 1 })); }
         }
         setTaskLoading(null);

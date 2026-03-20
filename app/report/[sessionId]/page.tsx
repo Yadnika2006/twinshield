@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
+import { scenarios } from "@/lib/scenarios";
 
 export default function ReportPage({ params }: { params: { sessionId: string } }) {
     const router = useRouter();
@@ -21,7 +22,11 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
     }, [params.sessionId]);
 
     // Derived display values — real data if available, fallback to defaults
-    const scenarioName = sessionData?.scenario_id || "SQLStorm";
+    const currentScenarioId = sessionData?.scenario_id || "";
+    const currentScenario = scenarios.find(s => s.id === currentScenarioId);
+    const scenarioName = currentScenario?.name || currentScenarioId || "Lab";
+    const currentIndex = scenarios.findIndex(s => s.id === currentScenarioId);
+    const nextScenario = currentIndex >= 0 && currentIndex < scenarios.length - 1 ? scenarios[currentIndex + 1] : scenarios[0];
     const grade = sessionData?.grade || "B+";
     const attackerScore = sessionData?.attacker_score ?? 74;
     const defenderScore = sessionData?.defender_score ?? 61;
@@ -249,8 +254,8 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                                 <div className="rec-card recommended-next">
                                     <div className="rec-icon">➡️</div>
                                     <h4 className="orbitron">NEXT SCENARIO RECOMMENDED</h4>
-                                    <p className="blue">BruteX — Brute Force Attack</p>
-                                    <Link href="/lab/brute-x" className="rec-btn mono">▶ LAUNCH NOW</Link>
+                                    <p className="blue">{nextScenario.name} — {nextScenario.category}</p>
+                                    <Link href={`/lab/${nextScenario.id}`} className="rec-btn mono">▶ LAUNCH NOW</Link>
                                 </div>
                             </div>
                         </section>
@@ -258,9 +263,9 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                         {/* ── SECTION 6: ACTION BUTTONS ROW ── */}
                         <div className="bottom-actions">
                             <button className="btn-action mono" onClick={() => router.push('/dashboard')}>↩ BACK TO DASHBOARD</button>
-                            <button className="btn-action mono" onClick={() => router.push(`/lab/${params.sessionId}`)}>🔁 TRY AGAIN</button>
+                            <button className="btn-action mono" onClick={() => router.push(`/lab/${currentScenarioId || params.sessionId}`)}>🔁 TRY AGAIN</button>
                             <button className="btn-action mono disabled" title="Coming soon">📄 EXPORT PDF</button>
-                            <button className="btn-action primary mono" onClick={() => router.push('/lab/brute-x')}>▶ NEXT SCENARIO</button>
+                            <button className="btn-action primary mono" onClick={() => router.push(`/lab/${nextScenario.id}`)}>▶ NEXT SCENARIO</button>
                         </div>
 
                     </div>

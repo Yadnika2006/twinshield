@@ -92,8 +92,11 @@ export async function POST(req: NextRequest) {
                 );
             }
 
-            const correct =
-                submittedAnswer.toLowerCase() === (task.expectedAnswer ?? "").trim().toLowerCase();
+            const expected = (task.expectedAnswer ?? "").trim().toLowerCase();
+            const submitted = submittedAnswer.toLowerCase();
+            const correct = submitted === expected
+                || submitted.includes(expected)
+                || expected.includes(submitted);
 
             if (!correct) {
                 return NextResponse.json({ correct: false }, { headers: rateHeaders });
