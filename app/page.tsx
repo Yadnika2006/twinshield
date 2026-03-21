@@ -17,8 +17,8 @@ const recentCyberAttacks = [
   },
   {
     title: "Match Group Breach: 10 Million Records Exposed via Third-Party Leak",
-    image: "http://googleusercontent.com/image_collection/image_retrieval/3890768943100439272_2",
-    url: "https://www.acilearning.com/blog/the-biggest-cybersecurity-breaches-of-2026-so-far/"
+    image: "https://cdn.prod.website-files.com/5efc3ccdb72aaa7480ec8179/697c4b09e09516a213cfe713_Match%20Group.jpg",
+    url: "https://www.upguard.com/news/match-data-breach-2026-01-29"
   },
   {
     title: "LexisNexis Confirms Breach via Critical 'React2Shell' Vulnerability",
@@ -37,8 +37,8 @@ const recentCyberAttacks = [
   },
   {
     title: "Brightspeed Ransomware Attack Impacts Over 1 Million Customers",
-    image: "http://googleusercontent.com/image_collection/image_retrieval/3890768943100439272_6",
-    url: "https://www.acilearning.com/blog/the-biggest-cybersecurity-breaches-of-2026-so-far/"
+    image: "https://image-optimizer.cyberriskalliance.com/unsafe/992x0/https://files.cyberriskalliance.com/wp-content/uploads/2024/02/020924_cyberattack.jpg",
+    url: "https://www.scworld.com/brief/brightspeed-investigates-cyberattack-claims-by-crimson-collective"
   },
   {
     title: "UPMC Investigates Potential Breach via Medical Records Vendor",
@@ -57,13 +57,13 @@ const recentCyberAttacks = [
   },
   {
     title: "Starbucks Discloses Breach of 'Partner Central' Employee Accounts",
-    image: "http://googleusercontent.com/image_collection/image_retrieval/3890768943100439272_10",
-    url: "https://www.bleepingcomputer.com/news/security/starbucks-discloses-data-breach-affecting-hundreds-of-employees/"
+    image: "https://i0.wp.com/securityaffairs.com/wp-content/uploads/2026/03/image-51.png?fit=1200%2C406&ssl=1",
+    url: "https://securityaffairs.com/189438/security/starbucks-data-breach-impacts-889-employees.html"
   },
   {
     title: "Cognizant TriZetto Breach Exposes Health Data of 3.4 Million",
-    image: "http://googleusercontent.com/image_collection/image_retrieval/3890768943100439272_11",
-    url: "https://www.bleepingcomputer.com/tag/data-breach/"
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRqJ5KK_hAKZ_iF-wlXHYCQiaDtYYUwRlRNbA&s",
+    url: "https://ciso.economictimes.indiatimes.com/news/data-breaches/cognizant-unit-trizetto-breach-exposes-data-of-3-4m-people/129309061"
   }
 ];
 
