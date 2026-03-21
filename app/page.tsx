@@ -4,6 +4,69 @@ import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 
+const recentCyberAttacks = [
+  {
+    title: "Iranian Hacktivists Cripple Stryker, Wiping 200,000+ Devices",
+    image: "https://www.bleepstatic.com/content/hl-images/2022/12/16/FBI__headpic.jpg",
+    url: "https://www.bleepingcomputer.com/news/security/fbi-seizes-handala-data-leak-site-after-stryker-cyberattack/"
+  },
+  {
+    title: "Navia Benefit Solutions Data Breach Impacts 2.7 Million People",
+    image: "https://www.bleepstatic.com/content/hl-images/2026/03/19/navia.jpg",
+    url: "https://www.bleepingcomputer.com/news/security/navia-discloses-data-breach-impacting-27-million-people/"
+  },
+  {
+    title: "Match Group Breach: 10 Million Records Exposed via Third-Party Leak",
+    image: "http://googleusercontent.com/image_collection/image_retrieval/3890768943100439272_2",
+    url: "https://www.acilearning.com/blog/the-biggest-cybersecurity-breaches-of-2026-so-far/"
+  },
+  {
+    title: "LexisNexis Confirms Breach via Critical 'React2Shell' Vulnerability",
+    image: "https://images.unsplash.com/photo-1579373903781-fd5c0c30c4cd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3wxMTc3M3wwfDF8c2VhcmNofDJ8fHZpZGVvJTIwZ2FtZXxlbnwwfHx8fDE3NzI4MjY4MTl8MA&ixlib=rb-4.1.0&q=80&w=2000",
+    url: "https://www.privacyguides.org/news/2026/03/09/data-breach-roundup-feb-20-feb-26-2026-2/"
+  },
+  {
+    title: "French Health Ministry Hack Exposes 15 Million Medical Records",
+    image: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSf6pwj-ZwSsJ37bdJYfc5PVfb7r9qZASRiAQ&s",
+    url: "https://www.france24.com/en/live-news/20260227-hackers-steal-medical-details-of-15-million-in-france"
+  },
+  {
+    title: "CarGurus Data Breach: 12 Million Users' Info Found on Dark Web",
+    image: "https://www.pkware.com/wp-content/uploads/2026/02/Hero-2026-2026-Data-Breaches-Cybersecurity-Incidents-Explained.webp",
+    url: "https://www.pkware.com/blog/2026-data-breaches"
+  },
+  {
+    title: "Brightspeed Ransomware Attack Impacts Over 1 Million Customers",
+    image: "http://googleusercontent.com/image_collection/image_retrieval/3890768943100439272_6",
+    url: "https://www.acilearning.com/blog/the-biggest-cybersecurity-breaches-of-2026-so-far/"
+  },
+  {
+    title: "UPMC Investigates Potential Breach via Medical Records Vendor",
+    image: "https://media.bizj.us/view/img/13106376/year-in-review-photo-spread-upmc-presby-2*900xx3963-2229-0-651.jpg",
+    url: "https://www.classaction.org/data-breach-lawsuits/university-of-pittsburgh-medical-center-march-2026"
+  },
+  {
+    title: "Aura Identity Protection Confirms Exposure of 900,000 Contacts",
+    image: "https://www.bleepstatic.com/content/hl-images/2025/03/12/hacker.jpg",
+    url: "https://www.bleepingcomputer.com/news/security/aura-confirms-data-breach-exposing-900-000-marketing-contacts/"
+  },
+  {
+    title: "North Korean 'Lazarus' Group Targets Bitrefill Crypto Store",
+    image: "https://www.bleepstatic.com/content/hl-images/2026/03/19/Bitrefill.jpg",
+    url: "https://www.bleepingcomputer.com/news/security/bitrefill-blames-north-korean-lazarus-group-for-cyberattack/"
+  },
+  {
+    title: "Starbucks Discloses Breach of 'Partner Central' Employee Accounts",
+    image: "http://googleusercontent.com/image_collection/image_retrieval/3890768943100439272_10",
+    url: "https://www.bleepingcomputer.com/news/security/starbucks-discloses-data-breach-affecting-hundreds-of-employees/"
+  },
+  {
+    title: "Cognizant TriZetto Breach Exposes Health Data of 3.4 Million",
+    image: "http://googleusercontent.com/image_collection/image_retrieval/3890768943100439272_11",
+    url: "https://www.bleepingcomputer.com/tag/data-breach/"
+  }
+];
+
 export default function HomePage() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const router = useRouter();
@@ -168,6 +231,7 @@ export default function HomePage() {
           <a href="#features" onClick={(e) => { e.preventDefault(); scrollTo("features"); }}>Features</a>
           <a href="#agents" onClick={(e) => { e.preventDefault(); scrollTo("agents"); }}>Agents</a>
           <a href="#how" onClick={(e) => { e.preventDefault(); scrollTo("how"); }}>How It Works</a>
+          <a href="#blogs" onClick={(e) => { e.preventDefault(); scrollTo("blogs"); }}>Blogs</a>
           <a href="#login" onClick={(e) => { e.preventDefault(); scrollTo("login"); }}>Lab Access</a>
         </div>
       </nav>
@@ -392,6 +456,37 @@ export default function HomePage() {
                 <div className="step-title">{s.title}</div>
                 <p className="step-desc">{s.desc}</p>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ════════════════════════════════
+          BLOGS (RECENT CYBER ATTACKS)
+      ════════════════════════════════ */}
+      <section id="blogs" className="landing-section">
+        <div className="blogs-inner">
+          <div className="blogs-header">
+            <p className="section-label">// Threat Intelligence</p>
+            <h2 className="section-title">Recent Cyber Attacks</h2>
+            <p style={{ color: "var(--dim)", fontSize: "0.9rem", maxWidth: 560, margin: "0 auto", lineHeight: 1.7 }}>
+              Stay updated with the latest cybersecurity breaches, vulnerabilities, and threat landscapes.
+            </p>
+          </div>
+          <div className="blogs-grid">
+            {recentCyberAttacks.map((attack, idx) => (
+              <a href={attack.url} target="_blank" rel="noopener noreferrer" className="blog-card" key={idx}>
+                <div className="blog-image-wrapper">
+                  <img src={attack.image} alt={attack.title} className="blog-image" />
+                </div>
+                <div className="blog-content">
+                  <h3 className="blog-title">{attack.title}</h3>
+                  <div className="blog-meta">
+                    <span className="blog-tag">INTELLIGENCE</span>
+                    <span className="blog-read-more">Read Full Report</span>
+                  </div>
+                </div>
+              </a>
             ))}
           </div>
         </div>
