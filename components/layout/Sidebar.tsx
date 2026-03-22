@@ -8,9 +8,14 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
 
-  const role = (session?.user as { role?: string } | undefined)?.role || "student";
-  const displayName = status === "loading" ? "" : (session?.user?.name || "GUEST");
-  const displayRole = status === "loading" ? "" : role.toUpperCase();
+  const role = status === "authenticated"
+    ? ((session?.user as { role?: string } | undefined)?.role || "student")
+    : null;
+  const displayName = status === "authenticated" ? (session?.user?.name || "GUEST") : "";
+  const displayRole = role ? role.toUpperCase() : "";
+  const avatarText = status === "authenticated" && session?.user?.name
+    ? session.user.name.substring(0, 2).toUpperCase()
+    : "";
 
   const links = [
     { name: "Dashboard", path: "/dashboard", icon: "◈" },
@@ -37,13 +42,15 @@ export default function Sidebar() {
 
           <div className="ts-operator-profile">
             <div className="ts-avatar-circle">
-              {session?.user?.name ? session.user.name.substring(0, 2).toUpperCase() : "OP"}
+              {avatarText}
             </div>
             <div className="ts-operator-info">
               <span className="ts-op-name">{displayName}</span>
-              <span className={`ts-role-pill ${role}`}>
-                {displayRole}
-              </span>
+              {role && (
+                <span className={`ts-role-pill ${role}`}>
+                  {displayRole}
+                </span>
+              )}
             </div>
           </div>
         </div>

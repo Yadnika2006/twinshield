@@ -1,24 +1,67 @@
 "use client";
 
 export default function Loading() {
-    return (
-        <div className="flex items-center justify-center min-h-screen bg-[#0a1628] text-[#00d4ff] font-mono">
-      <div className="flex flex-col items-center gap-6">
-        <div className="text-6xl text-blue-400">⬡</div>
-        <div className="text-sm tracking-[0.3em] uppercase font-orbitron">Loading...</div>
-        <div className="w-48 h-1 bg-black/50 border border-white/5 relative overflow-hidden">
-                    <div className="absolute inset-y-0 left-0 w-1/3 bg-blue-500 animate-loading-bar" />
-                </div>
-            </div>
-            <style jsx>{`
-        @keyframes loading-bar {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        width: "100%",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: "#0a1628",
+        color: "#00d4ff",
+        fontFamily: "'Share Tech Mono', monospace",
+      }}
+    >
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          gap: "1.5rem",
+        }}
+      >
+        <div style={{ fontSize: "3rem", color: "#60a5fa" }}>⬡</div>
+        <div
+          style={{
+            fontSize: "0.8rem",
+            letterSpacing: "0.3em",
+            textTransform: "uppercase",
+            fontFamily: "'Orbitron', sans-serif",
+          }}
+        >
+          Loading...
+        </div>
+        <div
+          style={{
+            width: "12rem",
+            height: "0.25rem",
+            background: "rgba(0,0,0,0.5)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            position: "relative",
+            overflow: "hidden",
+          }}
+        >
+          <div className="ts-loading-bar" />
+        </div>
+      </div>
+
+      <style jsx>{`
+        @keyframes ts-loading-bar {
           0% { left: -100%; }
           100% { left: 100%; }
         }
-        .animate-loading-bar {
-          animation: loading-bar 1.5s infinite linear;
+
+        .ts-loading-bar {
+          position: absolute;
+          inset-block: 0;
+          left: 0;
+          width: 33%;
+          background: #3b82f6;
+          animation: ts-loading-bar 1.5s infinite linear;
         }
       `}</style>
-        </div>
-    )
+    </div>
+  );
 }

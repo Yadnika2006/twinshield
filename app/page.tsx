@@ -151,13 +151,11 @@ export default function HomePage() {
     if (result?.error) {
       setError("Invalid credentials");
       setIsLoading(false);
-    } else {
-      if (result?.url) {
-        window.location.href = result.url;
-      } else {
-        window.location.href = "/dashboard";
-      }
+      return;
     }
+
+    router.replace(result?.url || "/dashboard");
+    router.refresh();
   };
 
   const handleSignup = async (e: React.FormEvent) => {
@@ -200,14 +198,12 @@ export default function HomePage() {
         setIsLoginMode(true);
         setIsLoading(false);
       } else {
-        if (result?.url) {
-          window.location.href = result.url;
-        } else {
-          window.location.href = "/dashboard";
-        }
+        router.replace(result?.url || "/dashboard");
+        router.refresh();
       }
-    } catch (err: any) {
-      setError(err.message || "An error occurred during registration");
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : "An error occurred during registration";
+      setError(message);
       setIsLoading(false);
     }
   };

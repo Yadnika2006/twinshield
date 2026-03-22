@@ -405,3 +405,81 @@ export async function getLeaderboard(limit: number = 20) {
 
     return data || [];
 }
+
+// ─────────────────────────────────────────────
+// CTF FUNCTIONS
+// ─────────────────────────────────────────────
+
+export async function saveCTFAttempt({
+    userId,
+    challengeId,
+    flagSubmitted,
+    isCorrect,
+    hintsUsed = 0,
+    pointsEarned = 0,
+}: {
+    userId: string;
+    challengeId: string;
+    flagSubmitted: string;
+    isCorrect: boolean;
+    hintsUsed?: number;
+    pointsEarned?: number;
+}) {
+    const { data, error } = await supabaseAdmin
+        .from("ctf_attempts")
+        .upsert(
+            {
+                user_id: userId,
+                challenge_id: challengeId,
+                flag_submitted: flagSubmitted,
+                is_correct: isCorrect,
+                hints_used: hintsUsed,
+                points_earned: pointsEarned,
+            },
+            { onConflict: "user_id,challenge_id" }
+        )
+        .select()
+        .single();
+
+    if (error) {
+        console.error("CTF attempt save error:", error);
+        return null;
+    }
+    return data;
+}
+
+export async function getUserCTFProgress(userId: string) {
+    const { data, error } = await supabaseAdmin
+        .from("ctf_attempts")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
+
+    if (error) return [];
+    return data || [];
+}
+
+export async function getUserCTFStats(userId: string) {
+    const { data, error } = await supabaseAdmin
+        .from("ctf_attempts")
+        .select("*")
+        .eq("user_id", userId)
+        .eq("is_correct", true);
+
+    if (error) {
+        return {
+            totalSolved: 0,
+            totalPoints: 0,
+            solvedChallenges: [],
+        };
+    }
+
+    const totalSolved = (data || []).length;
+    const totalPoints = (data || []).reduce(
+        (sum, attempt) => sum + (attempt.points_earned || 0),
+        0
+    );
+    const solvedChallenges = (data || []).map((attempt) => attempt.challenge_id);
+
+    return { totalSolved, totalPoints, solvedChallenges };
+}

@@ -88,7 +88,8 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = result?.url || "/dashboard";
+    router.replace(result?.url || "/dashboard");
+    router.refresh();
   };
 
   const handleSignupSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -134,7 +135,12 @@ export default function LoginPage() {
       return;
     }
 
-    window.location.href = signInResult?.url || "/dashboard";
+    router.replace(signInResult?.url || "/dashboard");
+    router.refresh();
+  };
+
+  const handleGoogleLogin = () => {
+    signIn("google", { callbackUrl: "/dashboard" });
   };
 
   return (
@@ -193,7 +199,7 @@ export default function LoginPage() {
                 <span>— or continue with —</span>
               </div>
 
-              <button type="button" className="btn btn-oauth shimmer-white">
+              <button type="button" className="btn btn-oauth shimmer-white" onClick={handleGoogleLogin}>
                 <GoogleIcon />
                 <span>GOOGLE</span>
               </button>
@@ -256,7 +262,7 @@ export default function LoginPage() {
                 <span>— or continue with —</span>
               </div>
 
-              <button type="button" className="btn btn-oauth shimmer-white">
+              <button type="button" className="btn btn-oauth shimmer-white" onClick={handleGoogleLogin}>
                 <GoogleIcon />
                 <span>GOOGLE</span>
               </button>

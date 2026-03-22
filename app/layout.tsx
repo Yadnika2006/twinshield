@@ -17,7 +17,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>
+      <body style={{ backgroundColor: "#0a1628", color: "#c8e6f0" }}>
         <NextAuthProvider>{children}</NextAuthProvider>
       </body>
     </html>
