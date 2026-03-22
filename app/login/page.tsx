@@ -274,9 +274,9 @@ export default function LoginPage() {
       </div>
 
       {/* ── STYLES ────────────────────────────────────────────── */}
-      <style jsx global>{`
+      <style jsx>{`
         /* Core Reset & Fonts */
-        :root {
+        .wrapper {
           --bg: #0a1628;
           --panel: #091a2e;
           --border: rgba(0, 212, 255, 0.2);
@@ -284,9 +284,6 @@ export default function LoginPage() {
           --green: #00ff88;
           --text: #c8e6f0;
           --muted: #6b86a0;
-        }
-
-        .wrapper {
           position: relative;
           width: 100vw;
           min-height: 100vh;

@@ -6,9 +6,11 @@ import { useSession, signOut } from "next-auth/react";
 
 export default function Sidebar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const role = (session?.user as { role?: string } | undefined)?.role || "student";
+  const displayName = status === "loading" ? "" : (session?.user?.name || "GUEST");
+  const displayRole = status === "loading" ? "" : role.toUpperCase();
 
   const links = [
     { name: "Dashboard", path: "/dashboard", icon: "◈" },
@@ -38,9 +40,9 @@ export default function Sidebar() {
               {session?.user?.name ? session.user.name.substring(0, 2).toUpperCase() : "OP"}
             </div>
             <div className="ts-operator-info">
-              <span className="ts-op-name">{session?.user?.name || "GUEST"}</span>
+              <span className="ts-op-name">{displayName}</span>
               <span className={`ts-role-pill ${role}`}>
-                {role.toUpperCase()}
+                {displayRole}
               </span>
             </div>
           </div>

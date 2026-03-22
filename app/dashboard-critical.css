@@ -1,0 +1,343 @@
+/* Critical static styles to prevent first-paint unstyled dashboard flash */
+
+.ts-navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 60px;
+  background: rgba(9, 26, 46, 0.95);
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(0, 212, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  z-index: 1000;
+}
+
+.ts-nav-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 1.2rem;
+  color: #00d4ff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 2px;
+}
+
+.ts-logo-icon { font-size: 1.4rem; }
+.ts-page-title {
+  font-family: 'Share Tech Mono', monospace;
+  color: #6b86a0;
+  font-size: 1rem;
+  letter-spacing: 1px;
+}
+
+.ts-nav-right { display: flex; align-items: center; gap: 16px; }
+.ts-operator-name {
+  font-family: 'Exo 2', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #c8e6f0;
+}
+
+.ts-role-badge {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+}
+
+.ts-role-badge.student {
+  background: rgba(0, 255, 136, 0.15);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.ts-role-badge.instructor {
+  background: rgba(0, 212, 255, 0.15);
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.ts-navbar-logout-btn {
+  background: none;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff4444;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  padding: 6px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.ts-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 220px;
+  height: 100vh;
+  background: #091a2e;
+  border-right: 1px solid rgba(0, 212, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+}
+
+.ts-sidebar-header {
+  padding: 24px 20px;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.ts-sidebar-logo {
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 1.1rem;
+  color: #00d4ff;
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  letter-spacing: 1px;
+}
+
+.ts-operator-profile { display: flex; align-items: center; gap: 12px; }
+.ts-avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #00d4ff, #00ff88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: bold;
+  font-size: 0.8rem;
+  color: #050f1c;
+}
+
+.ts-operator-info { display: flex; flex-direction: column; gap: 4px; }
+.ts-op-name { font-family: 'Share Tech Mono', monospace; font-size: 0.85rem; color: #fff; }
+
+.ts-role-pill {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.65rem;
+  padding: 2px 8px;
+  border-radius: 10px;
+  width: fit-content;
+  font-weight: bold;
+}
+
+.ts-role-pill.student {
+  background: rgba(0, 255, 136, 0.1);
+  color: #00ff88;
+  border: 1px solid rgba(0, 255, 136, 0.3);
+}
+
+.ts-role-pill.instructor {
+  background: rgba(0, 212, 255, 0.1);
+  color: #00d4ff;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+}
+
+.ts-side-nav { flex: 1; display: flex; flex-direction: column; padding: 20px 0; overflow-y: auto; }
+
+.ts-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  text-decoration: none;
+  color: #6b86a0;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.9rem;
+  border-left: 3px solid transparent;
+}
+
+.ts-nav-item.active {
+  color: #00ff88;
+  background: rgba(0, 255, 136, 0.1);
+  border-left-color: #00ff88;
+}
+
+.ts-nav-icon { font-size: 0.9rem; }
+.ts-sidebar-footer { padding: 20px; border-top: 1px solid rgba(0, 212, 255, 0.1); }
+
+.ts-sidebar-logout-btn {
+  width: 100%;
+  background: transparent;
+  border: 1px solid rgba(255, 68, 68, 0.3);
+  color: #ff4444;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 0.8rem;
+  padding: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-align: center;
+}
+
+.ts-dashboard-route {
+  display: flex;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.ts-dashboard-route .main-content {
+  margin-left: 220px;
+  width: calc(100vw - 220px);
+  height: 100vh;
+  overflow-y: auto;
+  position: relative;
+}
+
+.ts-dashboard-route .dot-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  background-image: radial-gradient(rgba(0, 212, 255, 0.15) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.ts-dashboard-route .dashboard-container {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 100px;
+}
+
+.ts-dashboard-route .glass-panel {
+  background: rgba(9, 26, 46, 0.8);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  padding: 24px;
+  border-radius: 4px;
+}
+
+.ts-dashboard-route .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+.ts-dashboard-route .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+
+.ts-dashboard-route .orbitron { font-family: 'Orbitron', sans-serif; }
+.ts-dashboard-route .mono { font-family: 'Share Tech Mono', monospace; }
+
+.ts-dashboard-route .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.ts-dashboard-route .title-area { display: flex; align-items: center; gap: 10px; }
+.ts-dashboard-route .title-area h3 { margin: 0; font-family: 'Orbitron', sans-serif; font-size: 1.1rem; }
+.ts-dashboard-route .purple-pulse { color: #bb88ff; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; }
+.ts-dashboard-route .green-pulse { color: #00ff88; font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; }
+.ts-dashboard-route .kv { font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; margin-bottom: 15px; }
+.ts-dashboard-route .kv .k { color: #6b86a0; margin-right: 10px; }
+
+.ts-dashboard-route .btn-outline {
+  background: transparent;
+  border: 1px solid;
+  padding: 6px 16px;
+  font-family: 'Share Tech Mono', monospace;
+  cursor: pointer;
+  border-radius: 4px;
+  font-size: 0.8rem;
+}
+
+.ts-dashboard-route .btn-outline.purple { border-color: #bb88ff; color: #bb88ff; }
+.ts-dashboard-route .btn-outline.blue { border-color: #00d4ff; color: #00d4ff; }
+
+.ts-dashboard-route .stat-card { display: flex; flex-direction: column; gap: 12px; }
+.ts-dashboard-route .card-label { font-family: 'Share Tech Mono', monospace; font-size: 0.8rem; color: #6b86a0; margin: 0; }
+.ts-dashboard-route .gradient-text {
+  background: linear-gradient(90deg, #00d4ff, #8a2be2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: 'Orbitron', sans-serif;
+  font-weight: 900;
+  font-size: 1.8rem;
+}
+
+.ts-dashboard-route .prog-container { height: 10px; background: #050f1c; border-radius: 5px; overflow: hidden; }
+.ts-dashboard-route .prog-fill { height: 100%; background: linear-gradient(90deg, #00d4ff, #00ff88); }
+.ts-dashboard-route .prog-sub { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #888; }
+
+.ts-dashboard-route .badge-display,
+.ts-dashboard-route .streak-display { display: flex; align-items: center; gap: 15px; }
+
+.ts-dashboard-route .badge-icon { font-size: 2rem; }
+.ts-dashboard-route .badge-info,
+.ts-dashboard-route .streak-info { display: flex; flex-direction: column; }
+.ts-dashboard-route .b-name,
+.ts-dashboard-route .s-val { font-family: 'Orbitron', sans-serif; font-weight: bold; font-size: 1rem; }
+.ts-dashboard-route .b-date,
+.ts-dashboard-route .s-sub { font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; color: #888; }
+
+.ts-dashboard-route .welcome-strip {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0, 212, 255, 0.05);
+  padding: 20px 30px;
+  border-left: 4px solid #00d4ff;
+}
+
+.ts-dashboard-route .welcome-text h1 { margin: 0; font-size: 1.5rem; letter-spacing: 1px; }
+.ts-dashboard-route .welcome-text h1 span { color: #00ff88; font-size: 0.9rem; font-family: 'Share Tech Mono'; }
+.ts-dashboard-route .stat-chips { display: flex; gap: 12px; }
+
+.ts-dashboard-route .chip {
+  background: #050f1c;
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  padding: 8px 16px;
+  font-family: 'Share Tech Mono';
+  font-size: 0.85rem;
+  border-radius: 20px;
+}
+
+.ts-dashboard-route .chip.highlight { border-color: #00ff88; color: #00ff88; }
+
+.ts-dashboard-route .activity-list { display: flex; flex-direction: column; gap: 12px; }
+.ts-dashboard-route .activity-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: rgba(0,0,0,0.3);
+  padding: 15px 20px;
+  border: 1px solid rgba(255,255,255,0.05);
+}
+
+.ts-dashboard-route .btn-report {
+  background: transparent;
+  border: 1px solid #6b86a0;
+  color: #c8e6f0;
+  font-family: 'Share Tech Mono';
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.ts-dashboard-route .section-title { color: #00d4ff; font-family: 'Orbitron', sans-serif; margin: 0 0 12px 0; }
+.ts-dashboard-route .skeleton {
+  background: linear-gradient(90deg, rgba(0,212,255,0.05) 25%, rgba(0,212,255,0.12) 50%, rgba(0,212,255,0.05) 75%);
+  background-size: 200% 100%;
+  animation: ts-shimmer 1.5s infinite;
+}
+
+@keyframes ts-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}

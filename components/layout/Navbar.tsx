@@ -6,8 +6,10 @@ import { useSession, signOut } from "next-auth/react";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
   const userRole = (session?.user as { role?: string } | undefined)?.role || "student";
+  const userName = status === "loading" ? "" : (session?.user?.name || "GUEST");
+  const roleText = status === "loading" ? "" : userRole.toUpperCase();
 
   // Format pathname as title, e.g., /dashboard -> DASHBOARD
   const title = pathname === "/" ? "HOME" : pathname.split("/")[1].toUpperCase();
@@ -31,9 +33,9 @@ export default function Navbar() {
         </div>
 
         <div className="ts-nav-right">
-          <span className="ts-operator-name">{session?.user?.name || "GUEST"}</span>
+          <span className="ts-operator-name">{userName}</span>
           <span className={`ts-role-badge ${userRole}`}>
-            {userRole.toUpperCase()}
+            {roleText}
           </span>
           <button className="ts-navbar-logout-btn" onClick={handleLogout}>
             ⏻ ESC

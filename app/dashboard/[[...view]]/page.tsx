@@ -21,7 +21,7 @@ const ALL_BADGES: { id: string; icon: string; name: string; desc: string }[] = [
 export default function DashboardPage({ params }: { params?: { view?: string[] } }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const [activeFilter, setActiveFilter] = useState("ALL");
   const [userStats, setUserStats] = useState<any>(null);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
@@ -86,8 +86,10 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
     ? allScenarios
     : allScenarios.filter(s => s.diff === filterMap[activeFilter]);
 
+  const sessionUserName = session?.user?.name || (sessionStatus === "loading" ? "" : "OPERATOR");
+
   return (
-    <div className="layout">
+    <div className="layout ts-dashboard-route">
       <Sidebar />
       <div className="main-content">
         <div className="dot-bg" />
@@ -99,7 +101,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
             {/* 1. WELCOME STRIP */}
             <div className="welcome-strip">
               <div className="welcome-text">
-                <h1 className="orbitron">WELCOME BACK, {session?.user?.name || "OPERATOR"} <span className="pulse-dot">●</span> <span>ONLINE</span></h1>
+                <h1 className="orbitron">WELCOME BACK, {sessionUserName} <span className="pulse-dot">●</span> <span>ONLINE</span></h1>
               </div>
               <div className="stat-chips">
                 <div className={`chip ${statsLoading ? "skeleton" : ""}`}>{statsLoading ? "..." : `${userStats?.totalSessions ?? 0} SESSIONS`}</div>
