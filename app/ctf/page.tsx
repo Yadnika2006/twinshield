@@ -287,6 +287,10 @@ export default function CtfPage() {
     : null;
 
   const selectedProgress = selectedChallenge ? challengeProgress[selectedChallenge.id] : null;
+  const isLastSelectedChallenge =
+    selectedChallenge
+      ? CTF_CHALLENGES.findIndex((challenge) => challenge.id === selectedChallenge.id) === CTF_CHALLENGES.length - 1
+      : false;
 
   const remainingMs =
     selectedChallenge && selectedChallenge.timerMinutes && selectedProgress?.startedAt
@@ -391,6 +395,21 @@ export default function CtfPage() {
     setSelectedChallengeId(challenge.id);
     setFlagInput("");
     setFlagMessage(null);
+  }
+
+  function handleNextChallenge() {
+    if (!selectedChallenge) return;
+
+    const currentIndex = CTF_CHALLENGES.findIndex((challenge) => challenge.id === selectedChallenge.id);
+    if (currentIndex === -1) return;
+
+    if (currentIndex === CTF_CHALLENGES.length - 1) {
+      closeModal();
+      return;
+    }
+
+    const nextIndex = currentIndex + 1;
+    handleLaunchChallenge(CTF_CHALLENGES[nextIndex]);
   }
 
   function handleUnlockHint() {
@@ -976,6 +995,9 @@ MIME-Version: 1.0`}
                         onChange={(event) => setFlagInput(event.target.value)}
                       />
                       <button className="btn-solid" onClick={handleSubmitFlag}>SUBMIT FLAG</button>
+                      <button className="btn-next" onClick={handleNextChallenge}>
+                        {isLastSelectedChallenge ? "FINISH" : "NEXT CHALLENGE"}
+                      </button>
                     </div>
                     {flagMessage && <div className={`flag-message ${flagMessage.type}`}>{flagMessage.text}</div>}
                   </section>
@@ -1201,6 +1223,18 @@ MIME-Version: 1.0`}
           font-family: 'Share Tech Mono', monospace;
         }
         .flag-input:focus { border-color: #ff4444; box-shadow: 0 0 0 2px rgba(255,68,68,0.15); }
+        .btn-next {
+          background: rgba(0,212,255,0.1);
+          border: 1px solid #00d4ff;
+          color: #00d4ff;
+          font-family: 'Orbitron';
+          font-weight: bold;
+          padding: 10px;
+          cursor: pointer;
+          transition: all 0.2s;
+          clip-path: polygon(0 8px, 8px 0, 100% 0, 100% calc(100% - 8px), calc(100% - 8px) 100%, 0 100%);
+        }
+        .btn-next:hover { background: #00d4ff; color: #000; box-shadow: 0 0 12px rgba(0,212,255,0.35); }
 
         .flag-message { margin-top: 12px; font-family: 'Share Tech Mono', monospace; font-size: 0.9rem; padding: 10px; border: 1px solid; }
         .flag-message.success { color: #00ff88; border-color: rgba(0,255,136,0.4); background: rgba(0,255,136,0.08); }

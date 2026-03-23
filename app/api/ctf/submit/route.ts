@@ -2,29 +2,22 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { saveCTFAttempt } from "@/lib/db";
-import { Ratelimit } from "@upstash/ratelimit";
-import { Redis } from "@upstash/redis";
-
-const ratelimit = new Ratelimit({
-    redis: Redis.fromEnv(),
-    limiter: Ratelimit.slidingWindow(50, "1 h"), // 50 CTF submissions per hour per user
-    analytics: true,
-});
+import { applyRateLimit, buildRateLimitHeaders } from "@/lib/rate-limit";
 
 const CTF_FLAGS: Record<string, string> = {
-    "login-breaker": "FLAG{sql_bypass_admin}",
-    "phish-master": "FLAG{homograph_attack_detected}",
-    "cookie-monster": "FLAG{session_fixation_pwned}",
-    "xss-ploit": "FLAG{xss_cookie_stolen}",
-    "mitm-breaker": "FLAG{arp_poison_cracked}",
+    "loginbreaker-01": "FLAG{sql_bypass_admin}",
+    "phishmaster-01": "FLAG{homograph_attack_detected}",
+    "cookiemonster-01": "FLAG{session_fixation_pwned}",
+    "xssploit-01": "FLAG{xss_cookie_stolen}",
+    "mitmbreaker-01": "FLAG{arp_poison_cracked}",
 };
 
 const CTF_POINTS: Record<string, number> = {
-    "login-breaker": 100,
-    "phish-master": 100,
-    "cookie-monster": 150,
-    "xss-ploit": 150,
-    "mitm-breaker": 200,
+    "loginbreaker-01": 100,
+    "phishmaster-01": 150,
+    "cookiemonster-01": 200,
+    "xssploit-01": 200,
+    "mitmbreaker-01": 350,
 };
 
 export async function POST(req: Request) {
@@ -34,7 +27,23 @@ export async function POST(req: Request) {
             return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const userId = session.user.id || (session.user as Record<string, string>).userId;
+        const sessionUser = session.user as {
+            id?: string;
+            userId?: string;
+            email?: string | null;
+        };
+
+        let userId = sessionUser.id || sessionUser.userId;
+
+        if (!userId) {
+            const { data: userByEmail } = await supabaseAdmin
+                .from("users")
+                .select("id")
+                .eq("email", session.user.email)
+                .single();
+            userId = userByEmail?.id;
+        }
+
         if (!userId) {
             return Response.json(
                 { error: "User ID not found in session" },
@@ -42,12 +51,15 @@ export async function POST(req: Request) {
             );
         }
 
-        // Rate limit check
-        const { success } = await ratelimit.limit(userId);
-        if (!success) {
+        const rate = applyRateLimit(req, {
+            namespace: `ctf-submit:${userId}`,
+            maxRequests: 50,
+            windowMs: 60 * 60 * 1000,
+        });
+        if (!rate.success) {
             return Response.json(
                 { error: "Too many submissions. Try again later." },
-                { status: 429 }
+                { status: 429, headers: buildRateLimitHeaders(rate) }
             );
         }
 
@@ -81,13 +93,6 @@ export async function POST(req: Request) {
             pointsEarned,
         });
 
-        if (!attempt) {
-            return Response.json(
-                { error: "Failed to save attempt" },
-                { status: 500 }
-            );
-        }
-
         // If correct, update user's CTF score
         if (isCorrect) {
             const { data: user } = await supabaseAdmin
@@ -105,6 +110,7 @@ export async function POST(req: Request) {
 
         return Response.json({
             success: true,
+            persisted: Boolean(attempt),
             isCorrect,
             pointsEarned,
             message: isCorrect
