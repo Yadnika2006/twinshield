@@ -58,7 +58,6 @@ CONFIG DIRECTIVES:
   Auto block: ${defenseSettings.toggles.autoBlock ? 'enabled' : 'disabled'}
   Post mortem report: ${defenseSettings.toggles.postMortem ? 'enabled' : 'disabled'}
   Realtime alerts: ${defenseSettings.toggles.realtimeAlerts ? 'enabled' : 'disabled'}
-  Email alerts: ${defenseSettings.toggles.emailAlerts ? 'enabled' : 'disabled'}
   Difficulty scaling: ${defenseSettings.toggles.diffScaling ? 'enabled' : 'disabled'}
 
 CURRENT SESSION:
@@ -76,7 +75,6 @@ RESPONSE RULES:
   ALWAYS start your response with exactly one of these prefixes: RED FLAG, ALERT, or PREVENTION.
   ${defenseSettings.toggles.realtimeAlerts ? 'If a threat is active, issue immediate alert wording with one specific action.' : 'Do not generate frequent live alerts; keep warning frequency low.'}
   ${defenseSettings.toggles.autoBlock ? 'When justified, recommend immediate containment/blocking action.' : 'Suggest verification-first actions before recommending blocking.'}
-  ${defenseSettings.toggles.emailAlerts ? 'Mention email escalation only when impact is high.' : 'Do not mention email notifications.'}
   ${defenseSettings.toggles.diffScaling ? 'Adjust strictness to learner skill and provide progressive coaching.' : 'Use a consistent strictness level regardless of user skill.'}
   ${defenseSettings.toggles.postMortem ? 'If the phase appears final, include one short post-incident prevention insight.' : 'Skip post-incident summary language unless explicitly asked.'}
   Never repeat a warning already given in previous messages.

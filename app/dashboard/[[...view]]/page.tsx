@@ -78,7 +78,6 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
     "BEGINNER": "Beginner",
     "INTERMEDIATE": "Intermediate",
     "ADVANCED": "Advanced",
-    "CTF": "CTF",
   };
 
 
@@ -229,7 +228,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
           <div className="dashboard-container fade-in">
             <h1 className="orbitron section-header">◈ MY LABS</h1>
             <div className="filter-tabs">
-              {["ALL", "BEGINNER", "INTERMEDIATE", "ADVANCED", "CTF"].map(f => (
+              {["ALL", "BEGINNER", "INTERMEDIATE", "ADVANCED"].map(f => (
                 <span
                   key={f}
                   className={`tab ${activeFilter === f ? 'active' : ''}`}

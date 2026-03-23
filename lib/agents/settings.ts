@@ -19,7 +19,6 @@ export interface DefenseAgentToggles {
     autoBlock: boolean;
     postMortem: boolean;
     realtimeAlerts: boolean;
-    emailAlerts: boolean;
     diffScaling: boolean;
 }
 
@@ -65,7 +64,6 @@ export const defaultAgentSettings: AgentSettings = {
             autoBlock: true,
             postMortem: true,
             realtimeAlerts: true,
-            emailAlerts: false,
             diffScaling: true,
         },
         alertSensitivity: 'medium',
@@ -147,7 +145,6 @@ export function sanitizeDefenseSettings(input: unknown): DefenseAgentSettings {
                 toggles.realtimeAlerts,
                 defaultAgentSettings.defense.toggles.realtimeAlerts
             ),
-            emailAlerts: parseBoolean(toggles.emailAlerts, defaultAgentSettings.defense.toggles.emailAlerts),
             diffScaling: parseBoolean(toggles.diffScaling, defaultAgentSettings.defense.toggles.diffScaling),
         },
         alertSensitivity: parseEnum(

@@ -29,7 +29,7 @@ interface UserStats {
 }
 
 type ChallengeStatus = "UNSOLVED" | "ATTEMPTED" | "SOLVED";
-type ChallengeFilter = "ALL" | "WEB" | "CRYPTO" | "FORENSICS" | "OSINT";
+type ChallengeFilter = "ALL" | "WEB" | "FORENSICS" | "OSINT";
 type ChallengeId = "loginbreaker-01" | "phishmaster-01" | "cookiemonster-01" | "xssploit-01" | "mitmbreaker-01";
 
 interface Challenge {
@@ -830,7 +830,7 @@ MIME-Version: 1.0`}
           <section className="mt-4">
             <h2 className="section-title">◈ ACTIVE CHALLENGES</h2>
             <div className="filter-tabs">
-              {(["ALL", "WEB", "CRYPTO", "FORENSICS", "OSINT"] as ChallengeFilter[]).map((tab) => (
+              {(["ALL", "WEB", "FORENSICS", "OSINT"] as ChallengeFilter[]).map((tab) => (
                 <button
                   key={tab}
                   className={`filter-tab ${activeFilter === tab ? "active" : ""}`}

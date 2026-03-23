@@ -38,7 +38,6 @@ const defenseSettingsSchema = z
                 autoBlock: z.boolean(),
                 postMortem: z.boolean(),
                 realtimeAlerts: z.boolean(),
-                emailAlerts: z.boolean(),
                 diffScaling: z.boolean(),
             })
             .strict(),

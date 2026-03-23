@@ -392,7 +392,6 @@ export default function AgentConfigPage() {
                                                 { key: 'autoBlock', label: 'Auto block suspicious IPs', desc: 'Automatically firewall attacker IPs' },
                                                 { key: 'postMortem', label: 'Generate post-mortem report', desc: 'Full incident report after session' },
                                                 { key: 'realtimeAlerts', label: 'Real time SOC alerts', desc: 'Live alerts in lab SOC panel' },
-                                                { key: 'emailAlerts', label: 'Email alerts', desc: 'Send alerts to registered email' },
                                                 { key: 'diffScaling', label: 'Difficulty scaling', desc: 'Adapts defence to your skill level' },
                                             ].map(t => (
                                                 <div className="toggle-row" key={t.key}>
