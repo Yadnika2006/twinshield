@@ -4,18 +4,18 @@ import Sidebar from "@/components/layout/Sidebar";
 import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
-
+import { Target, Zap, Shield, Brain, Flame, Skull, Ghost, Trophy, Radio } from "lucide-react";
 
 // ── Badge definitions ──
-const ALL_BADGES: { id: string; icon: string; name: string; desc: string }[] = [
-  { id: "FIRST_BLOOD", icon: "🎯", name: "First Blood", desc: "Complete your first lab" },
-  { id: "SPEED_RUN", icon: "⚡", name: "Speed Run", desc: "Complete a lab in under 15 min" },
-  { id: "DEFENDER", icon: "🛡️", name: "Defender", desc: "Get 80+ defender score" },
-  { id: "QUIZ_MASTER", icon: "🧠", name: "Quiz Ace", desc: "Score 5/5 on any quiz" },
-  { id: "PERSISTENT", icon: "🔥", name: "Persistent", desc: "Complete 5+ sessions" },
-  { id: "ELITE_HACKER", icon: "💀", name: "Elite Hacker", desc: "Complete all advanced labs" },
-  { id: "GHOST", icon: "👻", name: "Ghost", desc: "Complete a lab with 0 defender alerts" },
-  { id: "CTF_CHAMPION", icon: "🏆", name: "CTF Champion", desc: "Win a CTF event" },
+const ALL_BADGES: { id: string; icon: React.ReactNode; name: string; desc: string }[] = [
+  { id: "FIRST_BLOOD", icon: <Target size={32} />, name: "First Blood", desc: "Complete your first lab" },
+  { id: "SPEED_RUN", icon: <Zap size={32} />, name: "Speed Run", desc: "Complete a lab in under 15 min" },
+  { id: "DEFENDER", icon: <Shield size={32} />, name: "Defender", desc: "Get 80+ defender score" },
+  { id: "QUIZ_MASTER", icon: <Brain size={32} />, name: "Quiz Ace", desc: "Score 5/5 on any quiz" },
+  { id: "PERSISTENT", icon: <Flame size={32} />, name: "Persistent", desc: "Complete 5+ sessions" },
+  { id: "ELITE_HACKER", icon: <Skull size={32} />, name: "Elite Hacker", desc: "Complete all advanced labs" },
+  { id: "GHOST", icon: <Ghost size={32} />, name: "Ghost", desc: "Complete a lab with 0 defender alerts" },
+  { id: "CTF_CHAMPION", icon: <Trophy size={32} />, name: "CTF Champion", desc: "Win a CTF event" },
 ];
 
 export default function DashboardPage({ params }: { params?: { view?: string[] } }) {
@@ -114,7 +114,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
             <div className="grid-2">
               <div className="glass-panel border-purple">
                 <div className="panel-header">
-                  <div className="title-area"><span className="icon">🧠</span><h3>MENTOR AI</h3></div>
+                  <div className="title-area"><span className="icon"><Brain size={24} /></span><h3>MENTOR AI</h3></div>
                   <div className="status purple-pulse">● ACTIVE</div>
                 </div>
                 <div className="panel-body">
@@ -125,7 +125,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
 
               <div className="glass-panel border-blue">
                 <div className="panel-header">
-                  <div className="title-area"><span className="icon">🛡️</span><h3>DEFENSE AI</h3></div>
+                  <div className="title-area"><span className="icon"><Shield size={24} /></span><h3>DEFENSE AI</h3></div>
                   <div className="status green-pulse">● STANDBY</div>
                 </div>
                 <div className="panel-body">
@@ -149,7 +149,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               <div className="glass-panel stat-card">
                 <h3 className="card-label">// RECENT BADGE</h3>
                 <div className="badge-display">
-                  <span className="badge-icon glow">🎯</span>
+                  <span className="badge-icon glow" style={{ display: 'inline-flex', alignItems: 'center' }}><Target size={32} /></span>
                   <div className="badge-info">
                     <span className="b-name">First Blood</span>
                     <span className="b-date">earned today</span>
@@ -160,7 +160,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               <div className="glass-panel stat-card">
                 <h3 className="card-label">// CURRENT STREAK</h3>
                 <div className="streak-display">
-                  <span className="streak-icon">🔥</span>
+                  <span className="streak-icon" style={{ display: 'inline-flex', alignItems: 'center', color: '#ff9900' }}><Flame size={32} /></span>
                   <div className="streak-info">
                     <span className="s-val">5 DAY STREAK</span>
                     <span className="s-sub">KEEP IT UP, OPERATOR</span>
@@ -216,7 +216,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
             {/* 6. CTF TEASER STRIP */}
             <div className="ctf-teaser-strip" onClick={() => router.push("/ctf")}>
               <div className="teaser-left">
-                <span className="trophy">🏆</span>
+                <span className="trophy"><Trophy size={28} /></span>
                 <span className="teaser-text">3 ACTIVE CTF CHALLENGES AVAILABLE</span>
               </div>
               <button className="btn-enter-ctf">▶ ENTER CTF ARENA</button>
@@ -241,7 +241,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
 
             {scenarios.length === 0 ? (
               <div className="glass-panel empty-state">
-                <span className="empty-icon">🏆</span>
+                <span className="empty-icon"><Trophy size={48} /></span>
                 <p className="orbitron">CTF LABS COMING SOON</p>
                 <span className="mono">CTF-specific scenarios will appear here during active events.</span>
               </div>
@@ -274,8 +274,8 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               </div>
             ) : !progressData ? (
               <div className="glass-panel" style={{ textAlign: 'center', padding: 60 }}>
-                <span style={{ fontSize: '3rem' }}>📡</span>
-                <p className="orbitron" style={{ color: '#6b86a0', marginTop: 16 }}>NO DATA AVAILABLE</p>
+                <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', color: '#6b86a0', marginBottom: '16px' }}><Radio size={48} /></span>
+                <p className="orbitron" style={{ color: '#6b86a0', margin: 0 }}>NO DATA AVAILABLE</p>
                 <p className="mono" style={{ color: '#4a6070', fontSize: '0.85rem' }}>Complete a lab to see your progress analytics.</p>
               </div>
             ) : (
@@ -337,7 +337,7 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
                             <span className="mono" style={{ fontSize: '0.7rem', color: '#4a6070' }}>Not started</span>
                           )}
                         </div>
-                        {lab.status === 'completed' && <div className="lmt-check">✓</div>}
+                        {lab.status === 'completed' && <div className="lmt-check"><Target size={14} /></div>}
                       </div>
                     ))}
                   </div>

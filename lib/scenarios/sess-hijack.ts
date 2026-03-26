@@ -46,6 +46,7 @@ export const sessHijackScript: ScenarioScript = {
                     text: 'Your session cookie is missing HttpOnly and Secure flags. These are basic security configurations that take seconds to add but prevent entire classes of attacks.',
                 },
             ],
+            nextPhase: 'xss-inject',
         },
 
         // ── PHASE 2 — XSS INJECT ──────────────────────────────────────────
@@ -116,6 +117,7 @@ export const sessHijackScript: ScenarioScript = {
                     text: 'Session token compromised. The attacker has a copy of your active login session. Go to account settings and log out of all other sessions immediately. Then change your password.',
                 },
             ],
+            nextPhase: 'hijack',
         },
 
         // ── PHASE 4 — HIJACK ──────────────────────────────────────────────

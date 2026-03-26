@@ -47,6 +47,7 @@ export const xssploitScript: ScenarioScript = {
                     text: 'A vulnerable input field was found on your site. Any field that reflects user input must sanitise it before displaying. Never trust user input — always encode output to prevent script injection.',
                 },
             ],
+            nextPhase: 'poc-test',
         },
 
         // ── PHASE 2 — POC TEST ────────────────────────────────────────────
@@ -117,6 +118,7 @@ export const xssploitScript: ScenarioScript = {
                     text: 'Your session cookie has been stolen. The attacker can now use this token to log in as you without needing your password. Log out of all sessions immediately and change your password.',
                 },
             ],
+            nextPhase: 'session-replay',
         },
 
         // ── PHASE 4 — SESSION REPLAY ──────────────────────────────────────

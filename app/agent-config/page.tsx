@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Brain, Shield } from "lucide-react";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import {
@@ -204,7 +205,7 @@ export default function AgentConfigPage() {
                             <div className="agent-card purple-theme">
                                 <div className="ac-header">
                                     <div className="ac-title">
-                                        <span className="orbitron ac-name purple-text">🧠 MENTOR AI</span>
+                                        <span className="orbitron ac-name purple-text" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Brain size={24} /> MENTOR AI</span>
                                         <span className="mono ac-sub">CYBERSECURITY EDUCATOR</span>
                                     </div>
                                     <button
@@ -328,7 +329,7 @@ export default function AgentConfigPage() {
                             <div className="agent-card green-theme">
                                 <div className="ac-header">
                                     <div className="ac-title">
-                                        <span className="orbitron ac-name green-text">🛡️ DEFENSE AI</span>
+                                        <span className="orbitron ac-name green-text" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Shield size={24} /> DEFENSE AI</span>
                                         <span className="mono ac-sub">DEFENCE AGENT</span>
                                     </div>
                                     <button
@@ -422,7 +423,7 @@ export default function AgentConfigPage() {
                                                 <div
                                                     key={opt.id}
                                                     className="rc-row"
-                                                    onClick={() => setAlertSens(opt.id)}
+                                                    onClick={() => setAlertSens(opt.id as 'low' | 'medium' | 'high')}
                                                 >
                                                     <span className={`rc-dot ${alertSens === opt.id ? 'green-dot' : ''}`}>
                                                         {alertSens === opt.id ? '●' : '○'}
@@ -451,20 +452,20 @@ export default function AgentConfigPage() {
                         <section className="terminal-log-section mt-8">
                             <h2 className="orbitron log-title">◈ RECENT AGENT ACTIVITY</h2>
                             <div className="term-panel mono">
-                                <div className="log-line">
-                                    <span className="t-time">[00:02]</span> <span className="t-purple">🧠 MENTOR AI</span>     <span className="t-msg">&quot;Session started — I will explain each attack technique as it unfolds&quot;</span>
+                                <div className="log-line" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span className="t-time">[00:02]</span> <span className="t-purple" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Brain size={14} /> MENTOR AI</span>     <span className="t-msg">&quot;Session started — I will explain each attack technique as it unfolds&quot;</span>
                                 </div>
-                                <div className="log-line">
-                                    <span className="t-time">[00:07]</span> <span className="t-green">🛡️ DEFENSE AI</span> <span className="t-msg">&quot;SQL injection pattern detected — alert fired to SOC panel&quot;</span>
+                                <div className="log-line" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span className="t-time">[00:07]</span> <span className="t-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Shield size={14} /> DEFENSE AI</span> <span className="t-msg">&quot;SQL injection pattern detected — alert fired to SOC panel&quot;</span>
                                 </div>
-                                <div className="log-line">
-                                    <span className="t-time">[00:11]</span> <span className="t-purple">🧠 MENTOR AI</span>     <span className="t-msg">&quot;Good progress — SQL injection works because input is not sanitised before the query&quot;</span>
+                                <div className="log-line" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span className="t-time">[00:11]</span> <span className="t-purple" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Brain size={14} /> MENTOR AI</span>     <span className="t-msg">&quot;Good progress — SQL injection works because input is not sanitised before the query&quot;</span>
                                 </div>
-                                <div className="log-line">
-                                    <span className="t-time">[00:18]</span> <span className="t-green">🛡️ DEFENSE AI</span> <span className="t-msg">&quot;Exfiltration attempt detected — outbound transfer blocked&quot;</span>
+                                <div className="log-line" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span className="t-time">[00:18]</span> <span className="t-green" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Shield size={14} /> DEFENSE AI</span> <span className="t-msg">&quot;Exfiltration attempt detected — outbound transfer blocked&quot;</span>
                                 </div>
-                                <div className="log-line">
-                                    <span className="t-time">[00:21]</span> <span className="t-purple">🧠 MENTOR AI</span>     <span className="t-msg">&quot;Session complete — full lesson summary saved to your report&quot;</span>
+                                <div className="log-line" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <span className="t-time">[00:21]</span> <span className="t-purple" style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}><Brain size={14} /> MENTOR AI</span>     <span className="t-msg">&quot;Session complete — full lesson summary saved to your report&quot;</span>
                                 </div>
                             </div>
                         </section>

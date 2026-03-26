@@ -58,6 +58,7 @@ export const keyLoggerScript: ScenarioScript = {
                     text: 'A keylogger records everything you type — passwords, emails, messages, banking details. Antivirus tools detect known keyloggers but custom ones like this may evade detection. 2FA protects you even if passwords are stolen.',
                 },
             ],
+            nextPhase: 'capturing',
         },
 
         // ── PHASE 2 — CAPTURING ───────────────────────────────────────────
@@ -130,6 +131,7 @@ export const keyLoggerScript: ScenarioScript = {
                     text: 'Keylogger actively capturing credentials. Your CorpBank and Gmail passwords are now compromised. Do not type any more passwords on this machine. Change all passwords from a different clean device immediately.',
                 },
             ],
+            nextPhase: 'exfiltrate',
         },
 
         // ── PHASE 4 — EXFILTRATE ──────────────────────────────────────────

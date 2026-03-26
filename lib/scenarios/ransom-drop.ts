@@ -60,6 +60,7 @@ export const ransomDropScript: ScenarioScript = {
                     text: 'Ransomware is executing on your system. The only recovery path is offline backups. Disconnect from network immediately to prevent spreading to shared drives and other network machines.',
                 },
             ],
+            nextPhase: 'encrypting',
         },
 
         // ── PHASE 2 — ENCRYPTING ──────────────────────────────────────────
@@ -132,6 +133,7 @@ export const ransomDropScript: ScenarioScript = {
                     text: 'All files encrypted including connected backups. Do not pay the ransom — no guarantee of key delivery and it funds criminal operations. Restore from last known clean offline backup.',
                 },
             ],
+            nextPhase: 'ransom-note',
         },
 
         // ── PHASE 4 — RANSOM NOTE ─────────────────────────────────────────

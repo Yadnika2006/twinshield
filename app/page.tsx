@@ -221,7 +221,7 @@ export default function HomePage() {
       ════════════════════════════════ */}
       <nav className="landing-nav">
         <div className="nav-logo">
-          <span className="shield-icon">⬡</span>TWINSHIELD
+          TWINSHIELD
         </div>
         <div className="nav-links">
           <a href="#features" onClick={(e) => { e.preventDefault(); scrollTo("features"); }}>Features</a>
@@ -267,10 +267,10 @@ export default function HomePage() {
         </p>
 
         <div className="hero-badges">
-          <span className="badge">🎯 Dual-View Attack Lab</span>
-          <span className="badge">🤖 AI Agents</span>
-          <span className="badge">🛡️ Live Defence Simulation</span>
-          <span className="badge">🎓 Skill Assessment</span>
+          <span className="badge">Dual-View Attack Lab</span>
+          <span className="badge">AI Agents</span>
+          <span className="badge">Live Defence Simulation</span>
+          <span className="badge">Skill Assessment</span>
         </div>
 
         <div className="hero-ctas">
@@ -369,15 +369,14 @@ export default function HomePage() {
           </div>
           <div className="features-grid">
             {[
-              { icon: "⚡", name: "Dual-View Lab", tag: "Core Feature", desc: "See the victim's UI and the attacker's terminal side-by-side in real time. Every command causes a visible reaction on the victim side." },
-              { icon: "🤖", name: "AI Agent System", tag: "AI Powered", desc: "Mentor AI guides your attack methodology. Defense AI defends, alerts, and coaches — both adapting to your skill level live." },
-              { icon: "🛡️", name: "SOC Simulation", tag: "Defence", desc: "Defense AI fires real SIEM-style alerts, builds an incident timeline, and generates post-mortem reports after every session." },
-              { icon: "🎯", name: "Scenario Library", tag: "12+ Scenarios", desc: "SQLi, phishing, ransomware, MitM, CVE exploitation — each with a realistic victim twin environment tailored to the attack type." },
-              { icon: "🏆", name: "CTF Mode", tag: "Competitive", desc: "Timed challenges, stealth scoring, hidden flags. Compete solo or in red vs blue team pairs. Full leaderboard and ranking system." },
-              { icon: "📊", name: "Instructor Dashboard", tag: "Education", desc: "Watch all student sessions live, assign scenarios, auto-grade with AI, and export cohort skill gap analytics as reports." },
+              { name: "Dual-View Lab", tag: "Core Feature", desc: "See the victim's UI and the attacker's terminal side-by-side in real time. Every command causes a visible reaction on the victim side." },
+              { name: "AI Agent System", tag: "AI Powered", desc: "Mentor AI guides your attack methodology. Defense AI defends, alerts, and coaches — both adapting to your skill level live." },
+              { name: "SOC Simulation", tag: "Defence", desc: "Defense AI fires real SIEM-style alerts, builds an incident timeline, and generates post-mortem reports after every session." },
+              { name: "Scenario Library", tag: "12+ Scenarios", desc: "SQLi, phishing, ransomware, MitM, CVE exploitation — each with a realistic victim twin environment tailored to the attack type." },
+              { name: "CTF Mode", tag: "Competitive", desc: "Timed challenges, stealth scoring, hidden flags. Compete solo or in red vs blue team pairs. Full leaderboard and ranking system." },
+              { name: "Instructor Dashboard", tag: "Education", desc: "Watch all student sessions live, assign scenarios, auto-grade with AI, and export cohort skill gap analytics as reports." },
             ].map((f) => (
               <div className="feature-card" key={f.name}>
-                <span className="feature-icon">{f.icon}</span>
                 <div className="feature-name">{f.name}</div>
                 <p className="feature-desc">{f.desc}</p>
                 <span className="feature-tag">{f.tag}</span>
@@ -403,7 +402,6 @@ export default function HomePage() {
           <div className="agents-grid">
             {/* MENTOR AI */}
             <div className="agent-card purple">
-              <span className="agent-sigil">🧠</span>
               <div className="agent-name">MENTOR AI</div>
               <div className="agent-role">// Cybersecurity Educator</div>
               <ul className="agent-abilities">
@@ -416,7 +414,6 @@ export default function HomePage() {
             </div>
             {/* DEFENSE AI */}
             <div className="agent-card blue-g">
-              <span className="agent-sigil">🛡️</span>
               <div className="agent-name">DEFENSE AI</div>
               <div className="agent-role">// Defence Agent</div>
               <ul className="agent-abilities">
@@ -780,7 +777,7 @@ export default function HomePage() {
           FOOTER
       ════════════════════════════════ */}
       <footer>
-        <div className="footer-logo">⬡ TWINSHIELD</div>
+        <div className="footer-logo">TWINSHIELD</div>
         <div className="footer-copy">
           © 2025 TwinShield Lab · All simulations run in isolated sandboxes
         </div>

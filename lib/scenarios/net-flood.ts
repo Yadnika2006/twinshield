@@ -53,6 +53,7 @@ export const netFloodScript: ScenarioScript = {
                     text: 'Massive traffic spike detected from multiple IP addresses simultaneously. This is a DDoS attack signature. Contact your hosting provider and CDN provider immediately to enable DDoS mitigation and traffic scrubbing.',
                 },
             ],
+            nextPhase: 'slowloris',
         },
 
         // ── PHASE 2 — SLOWLORIS ───────────────────────────────────────────

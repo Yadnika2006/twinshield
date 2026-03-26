@@ -55,13 +55,13 @@ export default function VictimPanel({ currentScreen, scenarioId, onInteraction }
             case 'sess-01':
                 return <SessHijackVictim currentScreen={currentScreen} onInteraction={onInteraction} />;
             case 'malware-01':
-                return <MalwareDropVictim currentScreen={currentScreen} />;
+                return <MalwareDropVictim currentScreen={currentScreen} onInteraction={onInteraction} />;
             case 'klog-01':
-                return <KeyLoggerVictim currentScreen={currentScreen} />;
+                return <KeyLoggerVictim currentScreen={currentScreen} onInteraction={onInteraction} />;
             case 'rnsw-01':
-                return <RansomDropVictim currentScreen={currentScreen} />;
+                return <RansomDropVictim currentScreen={currentScreen} onInteraction={onInteraction} />;
             case 'spy-01':
-                return <SpyAgentVictim currentScreen={currentScreen} />;
+                return <SpyAgentVictim currentScreen={currentScreen} onInteraction={onInteraction} />;
             case 'usb-01':
                 return <UsbDropVictim currentScreen={currentScreen} onInteraction={onInteraction} />;
             case 'weakpass-01':

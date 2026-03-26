@@ -63,6 +63,7 @@ export const spyAgentScript: ScenarioScript = {
                     text: 'Spyware operates completely silently. No popup, no warning, no performance impact. Regular application permission audits and antivirus scans are the only way to detect it before damage is done.',
                 },
             ],
+            nextPhase: 'monitoring',
         },
 
         // ── PHASE 2 — MONITORING ──────────────────────────────────────────
@@ -134,6 +135,7 @@ export const spyAgentScript: ScenarioScript = {
                     text: 'Sensitive information is being captured via screenshots. Cover webcam when not in use. Use privacy screen filters in public. Be aware of what is visible on screen before stepping away.',
                 },
             ],
+            nextPhase: 'camera',
         },
 
         // ── PHASE 4 — CAMERA ──────────────────────────────────────────────
@@ -164,6 +166,7 @@ export const spyAgentScript: ScenarioScript = {
                     text: 'Place a physical cover over your webcam. Use headphones with inline microphone for sensitive calls. Check camera and microphone permissions in privacy settings monthly. Tape is free and effective.',
                 },
             ],
+            nextPhase: 'exfiltrate',
         },
 
         // ── PHASE 5 — EXFILTRATE ──────────────────────────────────────────

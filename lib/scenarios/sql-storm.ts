@@ -58,6 +58,7 @@ export const sqlStormScript: ScenarioScript = {
                     text: 'SQL error messages are appearing on your login page. Error messages should never be shown to users — they reveal your database structure to attackers.',
                 },
             ],
+            nextPhase: 'sql-error',
         },
 
         // ── PHASE 2 — SQL ERROR ───────────────────────────────────────────
@@ -129,6 +130,7 @@ export const sqlStormScript: ScenarioScript = {
                     text: 'Authentication has been bypassed completely. The attacker is now logged into your admin dashboard without knowing any password. Parameterised queries would have prevented this entirely.',
                 },
             ],
+            nextPhase: 'db-dump',
         },
 
         // ── PHASE 4 — DB DUMP ─────────────────────────────────────────────

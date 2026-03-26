@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import ScenarioEngine from "@/components/lab/ScenarioEngine";
 import QuizPanel from "@/components/lab/QuizPanel";
+import { ChevronLeft, Lock, CheckCircle, Target, Zap, Clock, Wrench, Brain, Shield, Square, HelpCircle } from "lucide-react";
 
 import { getScenario } from "@/lib/scenarios";
 
@@ -210,6 +211,14 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
             {/* ── LAB SECONDARY NAVBAR ── */}
             <div className="lab-navbar">
                 <div className="lab-nav-left">
+                    <button 
+                        className="btn-back" 
+                        onClick={() => router.push('/dashboard/labs')}
+                        title="Back to Labs"
+                    >
+                        <ChevronLeft size={18} />
+                    </button>
+                    <span className="separator">|</span>
                     <span className="scen-name orbitron">{SCENARIO.name}</span>
                     <span className="separator">|</span>
                     <span
@@ -240,7 +249,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                 onClick={() => goTab(num as number)}
                             >
                                 <span className="tab-num">
-                                    {isLocked ? "🔒 " : isCompleted && !isActive ? "✓ " : `0${num} `}
+                                    {isLocked ? <Lock size={14} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> : isCompleted && !isActive ? <CheckCircle size={14} style={{ display: 'inline', verticalAlign: 'text-bottom', marginRight: '4px' }} /> : `0${num} `}
                                 </span>
                                 <span className="tab-label">{label}</span>
                             </button>
@@ -249,7 +258,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                 </div>
 
                 <div className="lab-nav-right">
-                    <span className="timer-display mono">⏱ {fmtTime(timer)}</span>
+                    <span className="timer-display mono" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={16} /> {fmtTime(timer)}</span>
                     {activeTab === 2 && (
                         <button
                             className="btn-next-nav"
@@ -283,12 +292,12 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
 
                             {/* Info strip */}
                             <div className="info-strip">
-                                <div className="info-chip">🎯 <b>SCENARIO:</b> {SCENARIO.name}</div>
-                                <div className="info-chip" style={{ color: diffColor }}>
-                                    ⚡ <b>DIFFICULTY:</b> {SCENARIO.difficulty}
+                                <div className="info-chip" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Target size={16} /> <b>SCENARIO:</b> {SCENARIO.name}</div>
+                                <div className="info-chip" style={{ color: diffColor, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Zap size={16} /> <b>DIFFICULTY:</b> {SCENARIO.difficulty}
                                 </div>
-                                <div className="info-chip">⏱ <b>EST TIME:</b> {SCENARIO.estimatedTime}</div>
-                                <div className="info-chip">🛠 <b>TOOLS:</b> {SCENARIO.tools.join(", ")}</div>
+                                <div className="info-chip" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={16} /> <b>EST TIME:</b> {SCENARIO.estimatedTime}</div>
+                                <div className="info-chip" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Wrench size={16} /> <b>TOOLS:</b> {SCENARIO.tools.join(", ")}</div>
                             </div>
 
                             {/* What is it */}
@@ -320,7 +329,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                 <h2 className="sec-title">◈ YOUR MISSION</h2>
                                 <div className="mission-list">
                                     {SCENARIO.objective.missions.map((m, i) => (
-                                        <div key={i} className="mission-pill">🎯 {m}</div>
+                                        <div key={i} className="mission-pill" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Target size={20} /> {m}</div>
                                     ))}
                                 </div>
                             </section>
@@ -331,7 +340,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                 <div className="agent-row">
                                     <div className="agent-card purple-card">
                                         <div className="agent-head">
-                                            <span className="agent-icon">🧠</span>
+                                            <span className="agent-icon" style={{ display: 'flex', alignItems: 'center' }}><Brain size={32} /></span>
                                             <span className="orbitron agent-name">MENTOR AI</span>
                                         </div>
                                         <p>{SCENARIO.objective.mentorAI.intro}</p>
@@ -339,7 +348,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                     </div>
                                     <div className="agent-card green-card">
                                         <div className="agent-head">
-                                            <span className="agent-icon">🛡️</span>
+                                            <span className="agent-icon" style={{ display: 'flex', alignItems: 'center' }}><Shield size={32} /></span>
                                             <span className="orbitron agent-name">DEFENSE AI</span>
                                         </div>
                                         <p>Monitoring for suspicious activity: {SCENARIO.objective.guardianAI.redFlags[0]}</p>
@@ -418,16 +427,16 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
 
                                     return (
                                         <div key={task.id} className={`task-card ${isDone ? "done" : isActive ? "active" : ""}`}>
-                                            <div className="t-icon">{isDone ? "✅" : "⬜"}</div>
+                                            <div className="t-icon" style={{ display: 'flex', alignItems: 'center' }}>{isDone ? <CheckCircle size={24} color="#00ff88" /> : <Square size={24} color="rgba(255,255,255,0.2)" />}</div>
                                             <div className="t-body">
                                                 <h4 className="orbitron t-name">TASK {task.id} — {task.title}</h4>
                                                 <p className="t-desc">{task.description}</p>
 
                                                 {isDone && (
                                                     <div style={{ marginTop: '8px' }}>
-                                                        <span className="mono" style={{ color: '#00ff88', display: 'block' }}>✅ Completed at {taskTimestamps[task.id]}</span>
+                                                        <span className="mono" style={{ color: '#00ff88', display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle size={14} /> Completed at {taskTimestamps[task.id]}</span>
                                                         {xpReward[task.id] && (
-                                                            <span className="mono" style={{ color: '#00d4ff', display: 'block', fontSize: '0.82rem' }}>+{xpReward[task.id]} XP awarded</span>
+                                                            <span className="mono" style={{ color: '#00d4ff', display: 'block', fontSize: '0.82rem', marginTop: '4px' }}>+{xpReward[task.id]} XP awarded</span>
                                                         )}
                                                     </div>
                                                 )}
@@ -449,7 +458,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                                 {/* QUESTION task */}
                                                 {isActive && task.type === 'question' && (
                                                     <div className="flag-section mt-4">
-                                                        <p className="mono" style={{ color: '#00d4ff', marginBottom: '10px', fontSize: '0.9rem' }}>❓ {task.question}</p>
+                                                        <p className="mono" style={{ color: '#00d4ff', marginBottom: '10px', fontSize: '0.9rem', display: 'flex', alignItems: 'center', gap: '6px' }}><HelpCircle size={16} /> {task.question}</p>
                                                         <div className="flag-row mt-2" style={{ display: 'flex', gap: '8px', marginBottom: '8px' }}>
                                                             <input
                                                                 className={`flag-input ${answerResult === false ? 'error' : ''}`}
@@ -577,6 +586,24 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
           border: 1px solid;
           border-radius: 20px;
           padding: 3px 10px;
+        }
+        
+        .btn-back {
+            background: rgba(0,212,255,0.05);
+            border: 1px solid rgba(0,212,255,0.2);
+            color: #00d4ff;
+            border-radius: 4px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-back:hover {
+            background: rgba(0,212,255,0.15);
+            box-shadow: 0 0 10px rgba(0,212,255,0.2);
         }
 
         .lab-nav-tabs {

@@ -47,6 +47,7 @@ export const bruteXScript: ScenarioScript = {
                     text: 'Your login page has no protection against automated attacks. Every login form needs rate limiting, account lockout after failed attempts and CAPTCHA to prevent brute force.',
                 },
             ],
+            nextPhase: 'intercept',
         },
 
         // ── PHASE 2 — INTERCEPT ───────────────────────────────────────────
@@ -133,6 +134,7 @@ export const bruteXScript: ScenarioScript = {
                     text: 'Brute force attack in progress — 1,000 attempts per second detected. Account lockout after 5 attempts would have stopped this attack after 5 seconds.',
                 },
             ],
+            nextPhase: 'login-success',
         },
 
         // ── PHASE 4 — LOGIN SUCCESS ───────────────────────────────────────

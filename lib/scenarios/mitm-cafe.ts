@@ -53,6 +53,7 @@ export const mitmCafeScript: ScenarioScript = {
                     text: 'ARP poisoning is invisible on public WiFi. The only protection is encryption. Use a VPN which encrypts all traffic before it leaves your device — the attacker only sees encrypted gibberish.',
                 },
             ],
+            nextPhase: 'ssl-strip',
         },
 
         // ── PHASE 2 — SSL STRIP ───────────────────────────────────────────
