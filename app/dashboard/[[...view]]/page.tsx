@@ -110,30 +110,6 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               </div>
             </div>
 
-            {/* 2. AGENT STATUS BAR */}
-            <div className="grid-2">
-              <div className="glass-panel border-purple">
-                <div className="panel-header">
-                  <div className="title-area"><span className="icon"><Brain size={24} /></span><h3>MENTOR AI</h3></div>
-                  <div className="status purple-pulse">● ACTIVE</div>
-                </div>
-                <div className="panel-body">
-                  <div className="kv"><span className="k">MODE:</span> <span className="v">CONTEXTUAL TEACHING</span></div>
-                  <button className="btn-outline purple" onClick={() => router.push("/agent-config")}>CONFIGURE →</button>
-                </div>
-              </div>
-
-              <div className="glass-panel border-blue">
-                <div className="panel-header">
-                  <div className="title-area"><span className="icon"><Shield size={24} /></span><h3>DEFENSE AI</h3></div>
-                  <div className="status green-pulse">● STANDBY</div>
-                </div>
-                <div className="panel-body">
-                  <div className="kv"><span className="k">MODE:</span> <span className="v">SOC ANALYST</span></div>
-                  <button className="btn-outline blue" onClick={() => router.push("/agent-config")}>CONFIGURE →</button>
-                </div>
-              </div>
-            </div>
 
             {/* 3. QUICK STATS ROW */}
             <div className="grid-3">
