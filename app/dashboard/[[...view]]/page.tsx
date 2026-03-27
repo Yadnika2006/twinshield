@@ -30,18 +30,18 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
   const [progressLoading, setProgressLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/user/stats')
+    fetch('/api/user/stats', { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setUserStats(data); })
       .catch(err => console.error("Stats fetch error:", err))
       .finally(() => setStatsLoading(false));
 
-    fetch('/api/leaderboard')
+    fetch('/api/leaderboard', { cache: 'no-store' })
       .then(r => r.ok ? r.json() : [])
       .then(data => { if (Array.isArray(data)) setLeaderboard(data); })
       .catch(err => console.error("Leaderboard fetch error:", err));
 
-    fetch('/api/user/progress')
+    fetch('/api/user/progress', { cache: 'no-store' })
       .then(r => r.ok ? r.json() : null)
       .then(data => { if (data) setProgressData(data); })
       .catch(err => console.error("Progress fetch error:", err))

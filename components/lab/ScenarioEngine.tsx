@@ -223,6 +223,15 @@ export default function ScenarioEngine({ scenarioId, onComplete }: ScenarioEngin
     }, [script, currentPhaseId, startPhase, onComplete, scenarioId]);
 
     const handleInteraction = useCallback((action: string, data?: InteractionPayload) => {
+        if (action !== 'keystroke') {
+            setAgentTrigger({
+                phase: currentPhaseId || 'interaction',
+                event: `ui_action:${action}`,
+                redFlags: scenarioMeta[scenarioId]?.redFlags || [],
+                timestamp: Date.now()
+            });
+        }
+
         switch(action) {
             case 'open-email':
                 setVictimScreen('email-open');
@@ -298,7 +307,7 @@ export default function ScenarioEngine({ scenarioId, onComplete }: ScenarioEngin
             default:
                 break;
         }
-    }, [currentPhaseId, startPhase]);
+    }, [currentPhaseId, startPhase, scenarioId]);
 
     if (!script) {
         return (
@@ -361,7 +370,7 @@ export default function ScenarioEngine({ scenarioId, onComplete }: ScenarioEngin
                     <AgentPanel
                         agentTrigger={agentTrigger}
                         scenarioId={scenarioId}
-                        isActive={isPlaying || showDecision}
+                        isActive={true}
                         mentorSettings={agentSettings.mentor}
                         defenseSettings={agentSettings.defense}
                     />

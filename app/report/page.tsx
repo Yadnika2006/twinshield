@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 import Sidebar from "@/components/layout/Sidebar";
 
 // Scenario metadata for display names
@@ -26,7 +25,6 @@ const SCENARIO_META: Record<string, { name: string; type: string; diff: string; 
 
 export default function ReportsHubPage() {
     const router = useRouter();
-    const { data: session } = useSession();
     const [sessions, setSessions] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [filterDiff, setFilterDiff] = useState("ALL");
@@ -34,7 +32,7 @@ export default function ReportsHubPage() {
     const [sortBy, setSortBy] = useState("date_desc");
 
     useEffect(() => {
-        fetch(`/api/user/reports?sort=${sortBy}`)
+        fetch(`/api/user/reports?sort=${sortBy}`, { cache: "no-store" })
             .then(r => r.ok ? r.json() : { sessions: [] })
             .then(data => setSessions(data.sessions || []))
             .catch(() => setSessions([]))

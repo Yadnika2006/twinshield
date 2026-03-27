@@ -7,18 +7,30 @@ import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import { scenarios } from "@/lib/scenarios";
 
+type SessionData = {
+    id: string;
+    scenario_id: string;
+    grade: string | null;
+    attacker_score: number | null;
+    defender_score: number | null;
+    quiz_score: number | null;
+    tasks_completed: number | null;
+    duration_seconds: number | null;
+    started_at: string | null;
+    ended_at: string | null;
+};
+
 export default function ReportPage({ params }: { params: { sessionId: string } }) {
     const router = useRouter();
 
-    const [sessionData, setSessionData] = useState<any>(null);
-    const [sessionLoading, setSessionLoading] = useState(true);
+    const [sessionData, setSessionData] = useState<SessionData | null>(null);
 
     useEffect(() => {
         // Try to fetch real session data
-        fetch(`/api/lab/session/${params.sessionId}`)
+        fetch(`/api/lab/session/${params.sessionId}`, { cache: "no-store" })
             .then(r => r.ok ? r.json() : null)
             .then(data => { if (data) setSessionData(data); })
-            .finally(() => setSessionLoading(false));
+            .catch(() => null);
     }, [params.sessionId]);
 
     // Derived display values — real data if available, fallback to defaults
@@ -27,18 +39,18 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
     const scenarioName = currentScenario?.name || currentScenarioId || "Lab";
     const currentIndex = scenarios.findIndex(s => s.id === currentScenarioId);
     const nextScenario = currentIndex >= 0 && currentIndex < scenarios.length - 1 ? scenarios[currentIndex + 1] : scenarios[0];
-    const grade = sessionData?.grade || "B+";
-    const attackerScore = sessionData?.attacker_score ?? 74;
-    const defenderScore = sessionData?.defender_score ?? 61;
-    const quizScore = sessionData?.quiz_score ?? 4;
-    const tasksCompleted = sessionData?.tasks_completed ?? 3;
-    const durationSec = sessionData?.duration_seconds ?? 1394;
-    const durationFmt = sessionData?.ended_at
+    const grade = sessionData?.grade || "—";
+    const attackerScore = sessionData?.attacker_score ?? 0;
+    const defenderScore = sessionData?.defender_score ?? 0;
+    const quizScore = sessionData?.quiz_score ?? 0;
+    const tasksCompleted = sessionData?.tasks_completed ?? 0;
+    const durationSec = sessionData?.duration_seconds ?? 0;
+    const durationFmt = sessionData?.ended_at && durationSec > 0
         ? `${String(Math.floor(durationSec / 60)).padStart(2, '0')}:${String(durationSec % 60).padStart(2, '0')}`
-        : "23:14";
+        : "00:00";
     const sessionDate = sessionData?.started_at
         ? new Date(sessionData.started_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
-        : "Oct 24, 2024";
+        : "—";
 
     return (
         <div className="dashboard-root">

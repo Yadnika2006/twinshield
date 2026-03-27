@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Navbar from "@/components/layout/Navbar";
 import ScenarioEngine from "@/components/lab/ScenarioEngine";
@@ -8,8 +8,6 @@ import QuizPanel from "@/components/lab/QuizPanel";
 import { ChevronLeft, Lock, CheckCircle, Target, Zap, Clock, Wrench, Brain, Shield, Square, HelpCircle } from "lucide-react";
 
 import { getScenario } from "@/lib/scenarios";
-
-const OPTION_LABELS = ["A", "B", "C", "D"];
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
@@ -67,6 +65,31 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
 
     // ── Quiz state ─────────────────────────────────────────────────────────────
     const [quizTotalScore, setQuizTotalScore] = useState(0);
+
+    const QUIZ_TOTAL_QUESTIONS = SCENARIO?.quiz?.length || 5;
+    const TASKS_TOTAL = SCENARIO?.tasks?.length || 5;
+
+    const calculateSessionScores = () => {
+        const quizPct = QUIZ_TOTAL_QUESTIONS > 0 ? quizTotalScore / QUIZ_TOTAL_QUESTIONS : 0;
+        const taskPct = TASKS_TOTAL > 0 ? completedTasks.length / TASKS_TOTAL : 0;
+
+        // Base score comes from demonstrated performance, then outcome nudges it.
+        let attacker = Math.round(40 + (quizPct * 30) + (taskPct * 30));
+        let defender = Math.round(35 + (quizPct * 35) + (taskPct * 30));
+
+        if (labOutcome === 'compromised') {
+            attacker += 10;
+            defender -= 5;
+        } else if (labOutcome === 'defended') {
+            attacker -= 5;
+            defender += 10;
+        }
+
+        attacker = Math.max(0, Math.min(100, attacker));
+        defender = Math.max(0, Math.min(100, defender));
+
+        return { attacker, defender };
+    };
 
     // ── Task state ─────────────────────────────────────────────────────────────
     const [completedTasks, setCompletedTasks] = useState<number[]>([]);
@@ -149,8 +172,6 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
         setTaskLoading(null);
     };
 
-    const allDone = SCENARIO ? completedTasks.length === SCENARIO.tasks.length : false;
-
     // ── Helpers ────────────────────────────────────────────────────────────────
     const goTab = (n: number) => {
         if (n === 4 && !completedTabs.includes(3)) return;
@@ -171,16 +192,10 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                 const data = await res.json();
                 setDbSessionId(data.sessionId);
             }
-        } catch (e) {
+        } catch {
             // Continue without DB session if API fails
         }
         goTab(2);
-    };
-
-    const endSession = () => {
-        setCompletedTabs((prev) => prev.includes(2) ? prev : [...prev, 2]);
-        setTimerActive(false);
-        goTab(4);
     };
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -299,6 +314,28 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                 <div className="info-chip" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={16} /> <b>EST TIME:</b> {SCENARIO.estimatedTime}</div>
                                 <div className="info-chip" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Wrench size={16} /> <b>TOOLS:</b> {SCENARIO.tools.join(", ")}</div>
                             </div>
+
+                            {/* Objective summary */}
+                            <section className="obj-section">
+                                <h2 className="sec-title">◈ OBJECTIVE</h2>
+                                <p className="body-text">
+                                    Your objective in this lab is from the victim&apos;s point of view: identify the attack early, protect your account or system, and respond quickly to limit impact.
+                                </p>
+                                <div className="mission-list">
+                                    <div className="mission-pill" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Target size={20} />
+                                        <span><b>Goal 1:</b> Detect the first warning sign as a victim: {SCENARIO.objective.guardianAI.redFlags[0]}</span>
+                                    </div>
+                                    <div className="mission-pill" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Target size={20} />
+                                        <span><b>Goal 2:</b> Take immediate defensive action: {SCENARIO.objective.guardianAI.immediateActions[0]}</span>
+                                    </div>
+                                    <div className="mission-pill" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Target size={20} />
+                                        <span><b>Goal 3:</b> Apply a prevention habit for future safety: {SCENARIO.objective.guardianAI.futurePrevention[0]}</span>
+                                    </div>
+                                </div>
+                            </section>
 
                             {/* What is it */}
                             <section className="obj-section">
@@ -502,6 +539,7 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                 className="btn-complete ready"
                                 onClick={async () => {
                                     if (dbSessionId) {
+                                        const { attacker, defender } = calculateSessionScores();
                                         // Complete the session in DB
                                         const res = await fetch('/api/lab/complete', {
                                             method: 'POST',
@@ -509,8 +547,8 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                             body: JSON.stringify({
                                                 sessionId: dbSessionId,
                                                 duration: timer,
-                                                attackerScore: 74,
-                                                defenderScore: 61,
+                                                attackerScore: attacker,
+                                                defenderScore: defender,
                                                 quizScore: quizTotalScore,
                                                 tasksCompleted: completedTasks.length,
                                             }),

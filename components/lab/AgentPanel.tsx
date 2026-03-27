@@ -1,6 +1,7 @@
 'use client';
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { scenarioMeta } from '@/lib/agents/scenario-metadata';
+import { getAllStepsForScenario } from '@/lib/agents/phase-steps';
 import {
     defaultAgentSettings,
     type DefenseAgentSettings,
@@ -36,6 +37,18 @@ interface AgentPanelProps {
     guardianMessages?: { agent: string; type: string; text: string }[];
 }
 
+function isFinalStage(trigger: AgentTrigger): boolean {
+    const text = `${trigger.phase} ${trigger.event}`.toLowerCase();
+    return (
+        text.includes('complete') ||
+        text.includes('completed') ||
+        text.includes('final') ||
+        text.includes('summary') ||
+        text.includes('post') ||
+        text.includes('compromised')
+    );
+}
+
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 function detectType(text: string, defaultType: 'lesson' | 'tip'): LiveMessage['type'] {
@@ -57,6 +70,7 @@ export default function AgentPanel({
     mentorMessages: scriptedMentor = [],
     guardianMessages: scriptedGuardian = [],
 }: AgentPanelProps) {
+    const [visiblePanel, setVisiblePanel] = useState<'mentor' | 'guardian' | 'both'>('mentor');
     const [mentorMessages, setMentorMessages] = useState<LiveMessage[]>([]);
     const [guardianMessages, setGuardianMessages] = useState<LiveMessage[]>([]);
     const [mentorHistory, setMentorHistory] = useState<string[]>([]);
@@ -67,6 +81,21 @@ export default function AgentPanel({
     const guardianRef = useRef<HTMLDivElement>(null);
     const prevTriggerTs = useRef<number>(0);
     const guardianTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const hasShownLabGuideRef = useRef<boolean>(false);
+    const finalLessonSentRef = useRef<boolean>(false);
+
+    const pushMentorMessage = useCallback((text: string, type: LiveMessage['type'] = 'lesson') => {
+        setMentorMessages(prev => [
+            ...prev,
+            {
+                id: `${Date.now()}-mentor-system-${Math.random().toString(36).slice(2, 8)}`,
+                text,
+                streaming: false,
+                timestamp: new Date(),
+                type,
+            },
+        ]);
+    }, []);
 
     // Auto-scroll
     useEffect(() => {
@@ -80,6 +109,20 @@ export default function AgentPanel({
             guardianRef.current.scrollTop = guardianRef.current.scrollHeight;
         }
     }, [guardianMessages]);
+
+    useEffect(() => {
+        if (!isActive || hasShownLabGuideRef.current) return;
+
+        hasShownLabGuideRef.current = true;
+        
+        // Get all steps for this scenario and display them at once
+        const allSteps = getAllStepsForScenario(scenarioId);
+        if (allSteps) {
+            pushMentorMessage(allSteps, 'tip');
+        } else {
+            pushMentorMessage('Lab started. Follow the phases below.', 'tip');
+        }
+    }, [isActive, scenarioId, pushMentorMessage]);
 
     // ── Live streaming call: Mentor AI ─────────────────────────────────────────
     const callMentorAI = useCallback(async (trigger: AgentTrigger) => {
@@ -266,8 +309,13 @@ export default function AgentPanel({
         // Capture trigger so closures inside timers see the correct value
         const trigger = agentTrigger;
 
-        // Fire Mentor AI immediately
-        callMentorAI(trigger);
+        // Only call mentor AI at the final stage
+        if (isFinalStage(trigger)) {
+            if (!finalLessonSentRef.current) {
+                finalLessonSentRef.current = true;
+                callMentorAI(trigger);
+            }
+        }
 
         // Fire Defense AI with a small offset.
         // Use a persistent ref so re-renders caused by setMentorMessages
@@ -281,12 +329,13 @@ export default function AgentPanel({
 
         // No cleanup return — we intentionally keep the guardian timer alive
         // across re-renders so it always fires.
-    }, [agentTrigger, callMentorAI, callGuardianAI]);
+    }, [agentTrigger, callMentorAI, callGuardianAI, pushMentorMessage]);
 
     // ── Chip renderer ─────────────────────────────────────────────────────────
     const getChip = (type: string, agent: 'mentor' | 'guardian') => {
         if (agent === 'mentor') {
             if (type === 'prevention') return <span className="chip chip-prev-mentor">🛡 PREVENTION</span>;
+            if (type === 'tip') return <span className="chip chip-step">➡ STEP</span>;
             return <span className="chip chip-lesson">📚 LESSON</span>;
         }
         switch (type) {
@@ -299,7 +348,32 @@ export default function AgentPanel({
 
     return (
         <div className="agent-wrapper">
+            <div className="panel-toggle mono">
+                <button
+                    className={`toggle-btn ${visiblePanel === 'mentor' ? 'active' : ''}`}
+                    onClick={() => setVisiblePanel('mentor')}
+                    type="button"
+                >
+                    Mentor
+                </button>
+                <button
+                    className={`toggle-btn ${visiblePanel === 'guardian' ? 'active' : ''}`}
+                    onClick={() => setVisiblePanel('guardian')}
+                    type="button"
+                >
+                    Defense
+                </button>
+                <button
+                    className={`toggle-btn ${visiblePanel === 'both' ? 'active' : ''}`}
+                    onClick={() => setVisiblePanel('both')}
+                    type="button"
+                >
+                    Both
+                </button>
+            </div>
+
             {/* ── Mentor AI ── */}
+            {(visiblePanel === 'mentor' || visiblePanel === 'both') && (
             <div className="agent-half mentor-half">
                 <div className="ah-header mentor">
                     <div className="ah-title orbitron">🧠 MENTOR AI</div>
@@ -318,7 +392,7 @@ export default function AgentPanel({
                                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                 </span>
                             </div>
-                            <div className="msg-text">
+                            <div className="msg-text" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
                                 {msg.text || <span className="streaming-dots"><span>.</span><span>.</span><span>.</span></span>}
                                 {msg.streaming && msg.text && <span className="cursor-blink">▌</span>}
                             </div>
@@ -326,8 +400,10 @@ export default function AgentPanel({
                     ))}
                 </div>
             </div>
+            )}
 
             {/* ── Defense AI ── */}
+            {(visiblePanel === 'guardian' || visiblePanel === 'both') && (
             <div className="agent-half guardian-half">
                 <div className="ah-header guardian">
                     <div className="ah-title orbitron">🛡️ DEFENSE AI</div>
@@ -346,7 +422,7 @@ export default function AgentPanel({
                                     {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}
                                 </span>
                             </div>
-                            <div className="msg-text">
+                            <div className="msg-text" style={{ whiteSpace: 'pre-wrap', wordWrap: 'break-word' }}>
                                 {msg.text || <span className="streaming-dots"><span>.</span><span>.</span><span>.</span></span>}
                                 {msg.streaming && msg.text && <span className="cursor-blink">▌</span>}
                             </div>
@@ -354,6 +430,7 @@ export default function AgentPanel({
                     ))}
                 </div>
             </div>
+            )}
 
             {/* ── AI Mode Indicator ── */}
             <div className="ai-mode-indicator mono">
@@ -372,6 +449,33 @@ export default function AgentPanel({
           border-radius: 4px;
           overflow: hidden;
         }
+                .panel-toggle {
+                    display: flex;
+                    gap: 6px;
+                    padding: 8px;
+                    border-bottom: 1px solid rgba(255,255,255,0.08);
+                    background: rgba(0,0,0,0.25);
+                }
+                .toggle-btn {
+                    flex: 1;
+                    padding: 6px 8px;
+                    border: 1px solid rgba(0,212,255,0.25);
+                    background: rgba(0,0,0,0.35);
+                    color: #7aa4c4;
+                    font-size: 0.72rem;
+                    letter-spacing: 0.4px;
+                    cursor: pointer;
+                    transition: all 0.15s ease;
+                }
+                .toggle-btn:hover {
+                    color: #c8e6f0;
+                    border-color: rgba(0,212,255,0.45);
+                }
+                .toggle-btn.active {
+                    color: #00d4ff;
+                    border-color: rgba(0,212,255,0.75);
+                    background: rgba(0,212,255,0.12);
+                }
         .agent-half {
           flex: 1;
           display: flex;
@@ -432,6 +536,7 @@ export default function AgentPanel({
           border: 1px solid; font-weight: bold; font-family: 'Share Tech Mono', monospace;
         }
         .chip-lesson    { color: #bb88ff; border-color: rgba(187,136,255,0.4); background: rgba(187,136,255,0.1); }
+        .chip-step      { color: #7dd3fc; border-color: rgba(125,211,252,0.45); background: rgba(125,211,252,0.12); }
         .chip-tip       { color: #00ff88; border-color: rgba(0,255,136,0.4); background: rgba(0,255,136,0.1); }
         .chip-alert     { color: #ff4444; border-color: rgba(255,68,68,0.4); background: rgba(255,68,68,0.1); }
         .chip-redflag   { color: #ffcc00; border-color: rgba(255,204,0,0.4); background: rgba(255,204,0,0.1); }

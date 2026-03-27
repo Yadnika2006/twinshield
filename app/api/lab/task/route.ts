@@ -1,7 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { getScenario } from "@/lib/scenarios";
-import { completeTask, getLabSessionForUser, updateUserXP } from "@/lib/db";
+import {
+    completeTask,
+    getLabSessionForUser,
+    getTaskCompletions,
+    updateLabSessionForUser,
+    updateUserXP,
+} from "@/lib/db";
 import { applyRateLimit, buildRateLimitHeaders } from "@/lib/rate-limit";
 import { InvalidJsonBodyError, parseJsonBodyWithLimit, RequestBodyTooLargeError } from "@/lib/request-body";
 import { labTaskRequestSchema } from "@/lib/validation/schemas";
@@ -13,6 +19,18 @@ const LAB_TASK_BODY_MAX_BYTES = 8 * 1024;
 function getSessionUserId(session: Awaited<ReturnType<typeof getServerSession>>): string | null {
     const user = session?.user as { id?: unknown } | undefined;
     return typeof user?.id === "string" ? user.id : null;
+}
+
+async function syncSessionTaskCount(sessionId: string, userId: string) {
+    const completions = await getTaskCompletions(sessionId);
+    const tasksCompleted = new Set(
+        completions
+            .map((row: { task_id?: number | null }) => row.task_id)
+            .filter((taskId): taskId is number => typeof taskId === "number")
+    ).size;
+
+    await updateLabSessionForUser(sessionId, userId, { tasks_completed: tasksCompleted });
+    return tasksCompleted;
 }
 
 export async function POST(req: NextRequest) {
@@ -117,8 +135,9 @@ export async function POST(req: NextRequest) {
 
             const xpAwarded = payload.taskId * 30;
             await updateUserXP(userId, xpAwarded);
+            const tasksCompleted = await syncSessionTaskCount(payload.sessionId, userId);
 
-            return NextResponse.json({ correct: true, xpAwarded }, { headers: rateHeaders });
+            return NextResponse.json({ correct: true, xpAwarded, tasksCompleted }, { headers: rateHeaders });
         }
 
         if (task.type !== "checklist") {
@@ -138,8 +157,9 @@ export async function POST(req: NextRequest) {
 
         const xpAwarded = payload.taskId * 30;
         await updateUserXP(userId, xpAwarded);
+        const tasksCompleted = await syncSessionTaskCount(payload.sessionId, userId);
 
-        return NextResponse.json({ success: true, xpAwarded }, { headers: rateHeaders });
+        return NextResponse.json({ success: true, xpAwarded, tasksCompleted }, { headers: rateHeaders });
     } catch (error) {
         if (error instanceof RequestBodyTooLargeError) {
             return NextResponse.json(

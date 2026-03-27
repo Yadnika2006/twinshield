@@ -313,6 +313,16 @@ export async function getQuizResults(sessionId: string) {
     return data;
 }
 
+export async function getTaskCompletions(sessionId: string) {
+    const { data, error } = await supabaseAdmin
+        .from("task_completions")
+        .select("task_id")
+        .eq("session_id", sessionId);
+
+    if (error) return [];
+    return data || [];
+}
+
 // ─────────────────────────────────────────────
 // BADGE FUNCTIONS
 // ─────────────────────────────────────────────

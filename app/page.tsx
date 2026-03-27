@@ -402,7 +402,28 @@ export default function HomePage() {
           <div className="agents-grid">
             {/* MENTOR AI */}
             <div className="agent-card purple">
-              <div className="agent-name">MENTOR AI</div>
+              <div className="agent-name" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 6,
+                    border: "1px solid rgba(255, 122, 89, 0.55)",
+                    background: "rgba(255, 122, 89, 0.08)",
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M9.2 4.5a2.7 2.7 0 0 0-2.7 2.7v.3a2.6 2.6 0 0 0-1.9 2.5 2.6 2.6 0 0 0 1.9 2.5v.3a2.7 2.7 0 0 0 2.7 2.7h1.1V4.5H9.2Z" stroke="#ff9f7a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M14.8 4.5a2.7 2.7 0 0 1 2.7 2.7v.3a2.6 2.6 0 0 1 1.9 2.5 2.6 2.6 0 0 1-1.9 2.5v.3a2.7 2.7 0 0 1-2.7 2.7h-1.1V4.5h1.1Z" stroke="#ff9f7a" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path d="M10.3 7.8h3.4M10.3 10h3.4M10.3 12.2h3.4" stroke="#ff9f7a" strokeWidth="1.5" strokeLinecap="round"/>
+                  </svg>
+                </span>
+                <span>MENTOR AI</span>
+              </div>
               <div className="agent-role">// Cybersecurity Educator</div>
               <ul className="agent-abilities">
                 <li>Explains the psychological factors of each attack</li>
@@ -414,7 +435,27 @@ export default function HomePage() {
             </div>
             {/* DEFENSE AI */}
             <div className="agent-card blue-g">
-              <div className="agent-name">DEFENSE AI</div>
+              <div className="agent-name" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <span
+                  aria-hidden="true"
+                  style={{
+                    width: 28,
+                    height: 28,
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: 6,
+                    border: "1px solid rgba(0, 212, 255, 0.6)",
+                    background: "rgba(0, 212, 255, 0.08)",
+                  }}
+                >
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3.5 18.5 6v5.5c0 4-2.6 7.2-6.5 9-3.9-1.8-6.5-5-6.5-9V6L12 3.5Z" stroke="#00d4ff" strokeWidth="1.6" strokeLinejoin="round"/>
+                    <path d="m9.5 11.8 1.7 1.7 3.3-3.3" stroke="#00d4ff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </span>
+                <span>DEFENSE AI</span>
+              </div>
               <div className="agent-role">// Defence Agent</div>
               <ul className="agent-abilities">
                 <li>Detects attacks and fires SIEM-style alerts</li>

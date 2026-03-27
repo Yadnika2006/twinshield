@@ -1,6 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
-import { checkAndAwardBadges, getLabSessionForUser, updateLabSessionForUser, updateUserXP } from "@/lib/db";
+import {
+    checkAndAwardBadges,
+    getLabSessionForUser,
+    getQuizResults,
+    getTaskCompletions,
+    updateLabSessionForUser,
+    updateUserXP,
+} from "@/lib/db";
 import { applyRateLimit, buildRateLimitHeaders } from "@/lib/rate-limit";
 import { InvalidJsonBodyError, parseJsonBodyWithLimit, RequestBodyTooLargeError } from "@/lib/request-body";
 import { labCompleteRequestSchema } from "@/lib/validation/schemas";
@@ -21,6 +28,10 @@ function calculateGrade(score: number): string {
     if (score >= 60) return "B";
     if (score >= 50) return "C";
     return "D";
+}
+
+function clampScore(value: number): number {
+    return Math.max(0, Math.min(100, Math.round(value)));
 }
 
 export async function POST(req: NextRequest) {
@@ -53,7 +64,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await parseJsonBodyWithLimit(req, LAB_COMPLETE_BODY_MAX_BYTES);
-        const { sessionId, duration, attackerScore, defenderScore, quizScore, tasksCompleted } =
+        const { sessionId, duration, attackerScore, defenderScore } =
             labCompleteRequestSchema.parse(body);
 
         const existingSession = await getLabSessionForUser(sessionId, userId);
@@ -68,15 +79,36 @@ export async function POST(req: NextRequest) {
             );
         }
 
-        const grade = calculateGrade(attackerScore);
+        // Build canonical completion metrics from persisted user actions.
+        const quizResults = await getQuizResults(sessionId);
+        const canonicalQuizScore = quizResults.filter((r: { is_correct?: boolean }) => Boolean(r.is_correct)).length;
+
+        const taskCompletions = await getTaskCompletions(sessionId);
+        const canonicalTasksCompleted = new Set(
+            taskCompletions
+                .map((row: { task_id?: number | null }) => row.task_id)
+                .filter((taskId): taskId is number => typeof taskId === "number")
+        ).size;
+
+        const quizPercent = (canonicalQuizScore / 5) * 100;
+        const tasksPercent = (canonicalTasksCompleted / 5) * 100;
+        const finalAttackerScore = clampScore(attackerScore);
+        const finalDefenderScore = clampScore(defenderScore);
+        const overallScore = clampScore(
+            finalAttackerScore * 0.5 +
+            finalDefenderScore * 0.25 +
+            quizPercent * 0.15 +
+            tasksPercent * 0.1
+        );
+        const grade = calculateGrade(overallScore);
 
         const updated = await updateLabSessionForUser(sessionId, userId, {
             ended_at: new Date().toISOString(),
             duration_seconds: duration,
-            attacker_score: attackerScore,
-            defender_score: defenderScore,
-            quiz_score: quizScore,
-            tasks_completed: tasksCompleted,
+            attacker_score: finalAttackerScore,
+            defender_score: finalDefenderScore,
+            quiz_score: canonicalQuizScore,
+            tasks_completed: canonicalTasksCompleted,
             grade,
         });
 
@@ -84,7 +116,7 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Failed to update session" }, { status: 500, headers: rateHeaders });
         }
 
-        const updatedUser = await updateUserXP(userId, attackerScore);
+        const updatedUser = await updateUserXP(userId, finalAttackerScore);
         const newLevel = updatedUser?.level ?? null;
         const newBadges = await checkAndAwardBadges(userId, sessionId);
 

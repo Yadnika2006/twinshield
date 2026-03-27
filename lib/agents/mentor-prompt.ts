@@ -29,6 +29,28 @@ function getPersonalityDirective(personality: MentorAgentSettings['personality']
     }
 }
 
+function getUiGuidanceHint(currentPhase: string, phaseEvent: string): string {
+    const phase = `${currentPhase} ${phaseEvent}`.toLowerCase();
+
+    if (phase.includes('email') || phase.includes('phish')) {
+        return 'Guide the learner to click the suspicious email first, then interact with the link/credential form only when prompted.';
+    }
+
+    if (phase.includes('decision')) {
+        return 'Tell the learner to choose one decision option in the pop-up and explain the safer choice in one line.';
+    }
+
+    if (phase.includes('sql') || phase.includes('brute') || phase.includes('terminal') || phase.includes('attack')) {
+        return 'Guide the learner to use the attacker terminal actions and then observe victim-side changes before the next step.';
+    }
+
+    if (phase.includes('complete') || phase.includes('final') || phase.includes('summary')) {
+        return 'Guide the learner to proceed to NEXT: QUIZ and then NEXT: TASKS to finish the lab workflow.';
+    }
+
+    return 'Guide the learner with exact interaction wording such as click, tap, select, submit, or continue based on the current screen.';
+}
+
 export function buildMentorPrompt(context: {
     scenarioId: string;
     scenarioName: string;
@@ -65,6 +87,7 @@ CURRENT SESSION:
   Current phase: ${context.currentPhase}
   What just happened: ${context.phaseEvent}
   ${context.studentDecision ? 'Student just decided: ' + context.studentDecision : ''}
+    UI guidance hint: ${getUiGuidanceHint(context.currentPhase, context.phaseEvent)}
 
 PREVIOUS MESSAGES THIS SESSION:
   ${context.sessionHistory.length > 0 ? context.sessionHistory.map((m, i) => `[${i + 1}] ${m}`).join('\n  ') : 'None yet — this is the first message.'}
@@ -72,7 +95,10 @@ PREVIOUS MESSAGES THIS SESSION:
 RESPONSE RULES:
   Maximum 60 words.
   Start with the single most important insight.
-  End with one concrete takeaway.
+    End with one concrete takeaway.
+    Always include one explicit UI action sentence in this exact format: "Next click: <specific control/action>".
+    Use concrete UI verbs: click, tap, select, submit, continue.
+    If a decision modal is visible, guide the learner to pick a choice and briefly identify safer direction.
   Never repeat something already said in previous messages.
   ${mentorSettings.toggles.realWorldExamples ? 'Include a concise real-world example only when directly relevant.' : 'Do not include real-world breach examples unless explicitly asked.'}
   ${mentorSettings.toggles.psychologicalContext ? 'Explain the human and psychological factors behind the attack.' : 'Skip psychological framing and focus on operational mechanics.'}
