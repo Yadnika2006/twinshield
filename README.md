@@ -415,5 +415,5 @@ This project is built for **educational purposes only**. All attack simulations 
 </p>
 
 <p align="center">
-  <sub>Built with ☕ and <code>sudo</code> by <b>Team TwinShield</b></sub>
+  <sub>Built with ❤️</sub>
 </p>
