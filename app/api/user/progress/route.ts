@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getUserById, getUserBadges } from "@/lib/db";
+import { getUserById, getUserBadges, getUserCTFStats } from "@/lib/db";
 
 // Scenario metadata for mapping
 const SCENARIO_META: Record<string, { name: string; type: string; diff: string; category: string }> = {
@@ -127,12 +127,17 @@ export async function GET() {
     const strengths = scenarioAvgs.slice(0, 3);
     const weaknesses = scenarioAvgs.slice(-3).reverse();
 
+    const ctfStats = await getUserCTFStats(userId);
+    const isEligibleForCertificate = labMap.every(l => l.status === "completed") && ctfStats.totalSolved >= 5;
+
     return NextResponse.json({
         user: {
             level: user?.level || 1,
             xp: user?.xp || 0,
             score: user?.score || 0,
+            name: user?.name || "Operator",
         },
+        isEligibleForCertificate,
         radar,
         labMap,
         sessions,

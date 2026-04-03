@@ -256,6 +256,30 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               </div>
             ) : (
               <>
+                {/* ── CERTIFICATE BANNER ── */}
+                <div className={`certificate-banner glass-panel ${!progressData.isEligibleForCertificate ? 'locked' : ''}`}>
+                  <div className="cert-info">
+                    <span className="cert-icon">{progressData.isEligibleForCertificate ? '🏅' : '🔒'}</span>
+                    <div className="cert-text">
+                      <h3 className="orbitron">
+                        {progressData.isEligibleForCertificate ? "CONGRATULATIONS, OPERATOR" : "CERTIFICATE LOCKED"}
+                      </h3>
+                      <p className="mono">
+                        {progressData.isEligibleForCertificate 
+                          ? "You have successfully completed all Lab Scenarios and CTF Challenges." 
+                          : "Complete all Lab Scenarios and CTF Challenges to unlock your certificate."}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    className="btn-cert" 
+                    onClick={() => progressData.isEligibleForCertificate && router.push('/certificate')}
+                    disabled={!progressData.isEligibleForCertificate}
+                  >
+                    {progressData.isEligibleForCertificate ? 'CLAIM CERTIFICATE' : 'LOCKED'}
+                  </button>
+                </div>
+
                 {/* ── ROW 1: Level & Stats ── */}
                 <div className="glass-panel stat-card">
                   <h3 className="card-label">// LEVEL & XP</h3>
@@ -615,6 +639,19 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
         .pulse-dot-sm { color: #00ff88; animation: pulse 2s infinite; font-size: 0.7rem; }
 
         /* ─── PROGRESS PAGE STYLES ─── */
+        .certificate-banner { display: flex; justify-content: space-between; align-items: center; border-color: #00ff88; box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); background: linear-gradient(90deg, rgba(0,255,136,0.05), rgba(0,0,0,0)); margin-bottom: 20px; transition: 0.3s ease; }
+        .cert-info { display: flex; align-items: center; gap: 20px; }
+        .cert-icon { font-size: 3rem; filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.6)); }
+        .cert-text h3 { margin: 0; color: #00ff88; font-size: 1.2rem; text-shadow: 0 0 5px rgba(0, 255, 136, 0.5); }
+        .cert-text p { margin: 5px 0 0 0; color: #c8e6f0; font-size: 0.9rem; }
+        .btn-cert { background: linear-gradient(90deg, #00ff88, #00d4ff); color: #050f1c; font-family: 'Orbitron'; font-weight: bold; border: none; padding: 12px 24px; cursor: pointer; transition: 0.3s; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+        .btn-cert:hover { box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); transform: translateY(-2px); }
+
+        .certificate-banner.locked { border-color: rgba(255,255,255,0.1); box-shadow: none; background: rgba(0,0,0,0.2); opacity: 0.6; filter: grayscale(50%); }
+        .certificate-banner.locked .cert-icon { filter: grayscale(100%) opacity(0.5); font-size: 2.5rem; padding-left: 5px; }
+        .certificate-banner.locked .cert-text h3 { color: #6b86a0; text-shadow: none; }
+        .certificate-banner.locked .btn-cert { background: rgba(255,255,255,0.05); color: #6b86a0; cursor: not-allowed; box-shadow: none; transform: none; }
+
         .progress-stats-row-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         .progress-stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 
