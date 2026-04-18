@@ -8,6 +8,7 @@ import {
     updateLabSessionForUser,
     updateUserXP,
 } from "@/lib/db";
+import { scenarios } from "@/lib/scenarios";
 import { applyRateLimit, buildRateLimitHeaders } from "@/lib/rate-limit";
 import { InvalidJsonBodyError, parseJsonBodyWithLimit, RequestBodyTooLargeError } from "@/lib/request-body";
 import { labCompleteRequestSchema } from "@/lib/validation/schemas";
@@ -26,8 +27,9 @@ function calculateGrade(score: number): string {
     if (score >= 80) return "A";
     if (score >= 70) return "B+";
     if (score >= 60) return "B";
-    if (score >= 50) return "C";
-    return "D";
+    if (score >= 45) return "C";
+    if (score >= 35) return "D";
+    return "F";
 }
 
 function clampScore(value: number): number {
@@ -90,15 +92,20 @@ export async function POST(req: NextRequest) {
                 .filter((taskId): taskId is number => typeof taskId === "number")
         ).size;
 
-        const quizPercent = (canonicalQuizScore / 5) * 100;
-        const tasksPercent = (canonicalTasksCompleted / 5) * 100;
+        const scenario = scenarios.find(s => s.id === existingSession.scenario_id);
+        const totalPossibleQuiz = scenario?.quiz?.length || 5;
+        const totalPossibleTasks = scenario?.tasks?.length || 5;
+
+        const quizPercent = (canonicalQuizScore / totalPossibleQuiz) * 100;
+        const tasksPercent = (canonicalTasksCompleted / totalPossibleTasks) * 100;
+
         const finalAttackerScore = clampScore(attackerScore);
         const finalDefenderScore = clampScore(defenderScore);
         const overallScore = clampScore(
-            finalAttackerScore * 0.5 +
-            finalDefenderScore * 0.25 +
-            quizPercent * 0.15 +
-            tasksPercent * 0.1
+            finalAttackerScore * 0.3 +
+            finalDefenderScore * 0.1 +
+            quizPercent * 0.3 +
+            tasksPercent * 0.3
         );
         const grade = calculateGrade(overallScore);
 

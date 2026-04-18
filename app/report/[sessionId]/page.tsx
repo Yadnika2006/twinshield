@@ -33,17 +33,45 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
             .catch(() => null);
     }, [params.sessionId]);
 
-    // Derived display values — real data if available, fallback to defaults
+    // ── GRADE CALCULATION ENGINE (Fallback) ──
+    const calculateGrade = (score: number): string => {
+        if (score >= 90) return "S+";
+        if (score >= 80) return "A";
+        if (score >= 70) return "B+";
+        if (score >= 60) return "B";
+        if (score >= 45) return "C";
+        if (score >= 35) return "D";
+        return "F";
+    };
+
+    // Derived display values — real data if available, fallback to calculation
     const currentScenarioId = sessionData?.scenario_id || "";
     const currentScenario = scenarios.find(s => s.id === currentScenarioId);
     const scenarioName = currentScenario?.name || currentScenarioId || "Lab";
     const currentIndex = scenarios.findIndex(s => s.id === currentScenarioId);
     const nextScenario = currentIndex >= 0 && currentIndex < scenarios.length - 1 ? scenarios[currentIndex + 1] : scenarios[0];
-    const grade = sessionData?.grade || "—";
+    
     const attackerScore = sessionData?.attacker_score ?? 0;
     const defenderScore = sessionData?.defender_score ?? 0;
     const quizScore = sessionData?.quiz_score ?? 0;
     const tasksCompleted = sessionData?.tasks_completed ?? 0;
+
+    // Calculate overall score same as backend for consistency
+    const totalPossibleQuiz = currentScenario?.quiz?.length || 5;
+    const totalPossibleTasks = currentScenario?.tasks?.length || 5;
+
+    const quizPercent = (quizScore / totalPossibleQuiz) * 100;
+    const tasksPercent = (tasksCompleted / totalPossibleTasks) * 100;
+    
+    const overallScore = Math.round(
+        attackerScore * 0.3 +
+        defenderScore * 0.1 +
+        quizPercent * 0.3 +
+        tasksPercent * 0.3
+    );
+
+    const grade = sessionData?.grade || calculateGrade(overallScore);
+    
     const durationSec = sessionData?.duration_seconds ?? 0;
     const durationFmt = sessionData?.ended_at && durationSec > 0
         ? `${String(Math.floor(durationSec / 60)).padStart(2, '0')}:${String(durationSec % 60).padStart(2, '0')}`

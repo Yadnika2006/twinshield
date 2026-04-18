@@ -125,11 +125,26 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               <div className="glass-panel stat-card">
                 <h3 className="card-label">// RECENT BADGE</h3>
                 <div className="badge-display">
-                  <span className="badge-icon glow" style={{ display: 'inline-flex', alignItems: 'center' }}><Target size={32} /></span>
-                  <div className="badge-info">
-                    <span className="b-name">First Blood</span>
-                    <span className="b-date">earned today</span>
-                  </div>
+                  {statsLoading ? (
+                    <div className="skeleton" style={{ height: 40, width: '100%' }} />
+                  ) : userStats?.badges?.length > 0 ? (() => {
+                    const recent = [...userStats.badges].sort((a: any, b: any) => new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime())[0];
+                    const details = ALL_BADGES.find(b => b.id === recent.badge_id);
+                    return (
+                      <>
+                        <span className="badge-icon glow" style={{ display: 'inline-flex', alignItems: 'center' }}>{details?.icon || <Target size={32} />}</span>
+                        <div className="badge-info">
+                          <span className="b-name">{details?.name || recent.badge_id}</span>
+                          <span className="b-date">earned {new Date(recent.earned_at).toLocaleDateString()}</span>
+                        </div>
+                      </>
+                    );
+                  })() : (
+                    <div className="badge-info">
+                      <span className="b-name" style={{ color: '#6b86a0' }}>NONE YET</span>
+                      <span className="b-date">Complete labs to earn</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -138,8 +153,8 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
                 <div className="streak-display">
                   <span className="streak-icon" style={{ display: 'inline-flex', alignItems: 'center', color: '#ff9900' }}><Flame size={32} /></span>
                   <div className="streak-info">
-                    <span className="s-val">5 DAY STREAK</span>
-                    <span className="s-sub">KEEP IT UP, OPERATOR</span>
+                    <span className="s-val">{statsLoading ? "..." : `${userStats?.streak ?? 0} DAY STREAK`}</span>
+                    <span className="s-sub">{userStats?.streak > 0 ? "KEEP IT UP, OPERATOR" : "START YOUR JOURNEY TODAY"}</span>
                   </div>
                 </div>
               </div>
@@ -176,18 +191,32 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
             </div>
 
             {/* 5. RECOMMENDED NEXT LAB */}
-            <div className="recommended-card glass-panel shimmer-blue">
-              <div className="rec-content">
-                <h2 className="orbitron pink-glow">◈ CONTINUE YOUR JOURNEY</h2>
-                <p className="rec-sub">Based on your recent SQLi success, we recommend <b>PhishNet</b> to expand your initial access toolkit.</p>
-                <div className="rec-meta">
-                  <span>TARGET: Generic Corp</span>
-                  <span>|</span>
-                  <span>EST: 45 MIN</span>
+            {(() => {
+              // Find the first lab that isn't 'completed' in the progress data
+              const nextLab = progressData?.labMap?.find((l: any) => l.status !== 'completed') || allScenarios[0];
+              
+              return (
+                <div className="recommended-card glass-panel shimmer-blue">
+                  <div className="rec-content">
+                    <h2 className="orbitron pink-glow">◈ CONTINUE YOUR JOURNEY</h2>
+                    <p className="rec-sub">
+                      {progressData?.labMap?.some((l: any) => l.status === 'completed') 
+                        ? `Great work on your last mission! We recommend ` 
+                        : `Welcome, Operator. Start your journey with `}
+                      <b style={{ color: '#00d4ff' }}>{nextLab.name}</b> to advance your skills in {nextLab.type || nextLab.category}.
+                    </p>
+                    <div className="rec-meta">
+                      <span style={{ color: nextLab.diffColor || '#00ff88' }}>DIFFICULTY: {nextLab.diff || 'Beginner'}</span>
+                      <span>|</span>
+                      <span>CATEGORY: {nextLab.type || 'General'}</span>
+                    </div>
+                  </div>
+                  <button className="btn-launch-big" onClick={() => router.push(`/lab/${nextLab.id}?scenario=${nextLab.id}`)}>
+                    ▶ LAUNCH {nextLab.name.toUpperCase()}
+                  </button>
                 </div>
-              </div>
-              <button className="btn-launch-big" onClick={() => router.push("/lab/phish-01?scenario=phish-01")}>▶ LAUNCH LAB</button>
-            </div>
+              );
+            })()}
 
             {/* 6. CTF TEASER STRIP */}
             <div className="ctf-teaser-strip" onClick={() => router.push("/ctf")}>
@@ -493,26 +522,65 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               <table className="lb-table">
                 <thead><tr><th>RANK</th><th>OPERATOR</th><th>SCORE</th><th>LEVEL</th><th>STATUS</th></tr></thead>
                 <tbody>
-                  {leaderboard.length > 0 ? leaderboard.map((entry: any, i: number) => (
-                    <tr key={i} className={entry.user_id === (session?.user as any)?.id ? 'highlight' : ''}>
-                      <td>#{i + 1}</td>
-                      <td>{entry.name || `OPERATOR_${100 + i}`}</td>
-                      <td>{entry.score ?? 0}</td>
-                      <td>LV{entry.level ?? 1}</td>
-                      <td><span className="pulse-dot-sm">●</span> ONLINE</td>
+                  {leaderboard.length > 0 ? (
+                    <>
+                      {leaderboard.map((entry: any, i: number) => {
+                        const rank = entry.rank || i + 1;
+                        const isTop3 = rank <= 3;
+                        const rankColor = rank === 1 ? "#ffd700" : rank === 2 ? "#c0c0c0" : rank === 3 ? "#cd7f32" : "inherit";
+                        
+                        return (
+                          <tr key={i} className={`${entry.user_id === (session?.user as any)?.id ? 'highlight' : ''} ${isTop3 ? 'top-rank' : ''}`}>
+                            <td style={{ color: rankColor, fontWeight: isTop3 ? 'bold' : 'normal' }}>
+                              <span style={{ fontSize: isTop3 ? '1.5rem' : '1rem' }}>
+                                {rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`}
+                              </span>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span className={isTop3 ? 'orbitron' : ''}>{entry.name || `OPERATOR_${String(entry.user_id).slice(0, 4).toUpperCase()}`}</span>
+                                {isTop3 && (
+                                  <span className="mono" style={{ 
+                                    fontSize: '0.65rem', 
+                                    padding: '2px 6px', 
+                                    borderRadius: '4px', 
+                                    backgroundColor: 'rgba(255,255,255,0.1)',
+                                    border: `1px solid ${rankColor}`,
+                                    color: rankColor
+                                  }}>
+                                    {rank === 1 ? "ELITE" : "PRO"}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="orbitron" style={{ color: '#00d4ff' }}>{entry.score ?? 0}</td>
+                            <td><span className="mono">LV{entry.level ?? 1}</span></td>
+                            <td><span className="pulse-dot-sm">●</span> ONLINE</td>
+                          </tr>
+                        );
+                      })}
+                      {/* Personal Rank Sticky Footer (only if not already in the visible list) */}
+                      {!leaderboard.some((e: any) => e.user_id === (session?.user as any)?.id) && userStats && (
+                        <tr className="highlight sticky-rank">
+                          <td>#{userStats.rank || "—"}</td>
+                          <td>{session?.user?.name || "YOU"} (YOU)</td>
+                          <td>{userStats.totalScore || 0}</td>
+                          <td>LV{userStats.level || 1}</td>
+                          <td><span className="pulse-dot-sm">●</span> ONLINE</td>
+                        </tr>
+                      )}
+                    </>
+                  ) : (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b86a0', fontFamily: 'Share Tech Mono' }}>
+                        NO OPERATORS RANKED YET. BE THE FIRST!
+                      </td>
                     </tr>
-                  )) : [...Array(10)].map((_, i) => (
-                    <tr key={i} className={i === 6 ? 'highlight' : ''}>
-                      <td>#{i + 1}</td>
-                      <td>OPERATOR_{100 + i}</td>
-                      <td>{3000 - (i * 200)}</td>
-                      <td>LV{5 - Math.floor(i / 2)}</td>
-                      <td><span className="pulse-dot-sm">●</span> ONLINE</td>
-                    </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
+
           </div>
         )}
 
@@ -636,6 +704,14 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
         .lb-table th { padding: 15px; color: #6b86a0; border-bottom: 1px solid rgba(0,212,255,0.2); }
         .lb-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .lb-table tr.highlight { background: rgba(0, 255, 136, 0.1); color: #00ff88; font-weight: bold; }
+        .sticky-rank {
+          position: sticky;
+          bottom: 0;
+          background: rgba(0, 255, 136, 0.2) !important;
+          border-top: 2px solid #00ff88 !important;
+          backdrop-filter: blur(10px);
+          z-index: 10;
+        }
         .pulse-dot-sm { color: #00ff88; animation: pulse 2s infinite; font-size: 0.7rem; }
 
         /* ─── PROGRESS PAGE STYLES ─── */
