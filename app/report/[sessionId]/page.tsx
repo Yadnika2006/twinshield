@@ -220,16 +220,16 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                             <h2 className="orbitron">◈ SKILL ASSESSMENT</h2>
                             <div className="metrics-row">
                                 <div className="metric-card">
-                                    <div className="mc-val blue orbitron">{quizScore}/5</div>
+                                    <div className="mc-val blue orbitron">{quizScore}/{totalPossibleQuiz}</div>
                                     <div className="mc-label mono">QUIZ SCORE</div>
-                                    <div className="mc-bar-bg"><div className="mc-bar-fill blue-bg" style={{ width: `${(quizScore / 5) * 100}%` }}></div></div>
-                                    <div className={`mc-badge mono ${quizScore >= 3 ? 'green-bg' : 'orange-bg'}`}>{quizScore >= 3 ? 'PASS' : 'FAIL'}</div>
+                                    <div className="mc-bar-bg"><div className="mc-bar-fill blue-bg" style={{ width: `${(quizScore / totalPossibleQuiz) * 100}%` }}></div></div>
+                                    <div className={`mc-badge mono ${quizScore >= Math.ceil(totalPossibleQuiz * 0.6) ? 'green-bg' : 'orange-bg'}`}>{quizScore >= Math.ceil(totalPossibleQuiz * 0.6) ? 'PASS' : 'FAIL'}</div>
                                 </div>
                                 <div className="metric-card">
-                                    <div className="mc-val yellow orbitron">{tasksCompleted}/5</div>
+                                    <div className="mc-val yellow orbitron">{tasksCompleted}/{totalPossibleTasks}</div>
                                     <div className="mc-label mono">TASKS COMPLETE</div>
-                                    <div className="mc-bar-bg"><div className="mc-bar-fill yellow-bg" style={{ width: `${(tasksCompleted / 5) * 100}%` }}></div></div>
-                                    <div className={`mc-badge mono ${tasksCompleted >= 5 ? 'green-bg' : 'yellow-bg'}`}>{tasksCompleted >= 5 ? 'COMPLETE' : 'PARTIAL'}</div>
+                                    <div className="mc-bar-bg"><div className="mc-bar-fill yellow-bg" style={{ width: `${(tasksCompleted / totalPossibleTasks) * 100}%` }}></div></div>
+                                    <div className={`mc-badge mono ${tasksCompleted >= totalPossibleTasks ? 'green-bg' : 'yellow-bg'}`}>{tasksCompleted >= totalPossibleTasks ? 'COMPLETE' : 'PARTIAL'}</div>
                                 </div>
                                 <div className="metric-card">
                                     <div className="mc-val orange orbitron">{attackerScore}<span style={{ fontSize: '1rem' }}>/100</span></div>

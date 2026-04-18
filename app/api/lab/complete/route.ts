@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     try {
         const body = await parseJsonBodyWithLimit(req, LAB_COMPLETE_BODY_MAX_BYTES);
-        const { sessionId, duration, attackerScore, defenderScore } =
+        const { sessionId, duration, attackerScore, defenderScore, quizScore, tasksCompleted } =
             labCompleteRequestSchema.parse(body);
 
         const existingSession = await getLabSessionForUser(sessionId, userId);
@@ -83,14 +83,18 @@ export async function POST(req: NextRequest) {
 
         // Build canonical completion metrics from persisted user actions.
         const quizResults = await getQuizResults(sessionId);
-        const canonicalQuizScore = quizResults.filter((r: { is_correct?: boolean }) => Boolean(r.is_correct)).length;
+        const dbQuizScore = quizResults.filter((r: { is_correct?: boolean }) => Boolean(r.is_correct)).length;
 
         const taskCompletions = await getTaskCompletions(sessionId);
-        const canonicalTasksCompleted = new Set(
+        const dbTasksCompleted = new Set(
             taskCompletions
                 .map((row: { task_id?: number | null }) => row.task_id)
                 .filter((taskId): taskId is number => typeof taskId === "number")
         ).size;
+
+        // Use DB records if available, otherwise fall back to client-reported values
+        const canonicalQuizScore = dbQuizScore > 0 ? dbQuizScore : (quizScore ?? 0);
+        const canonicalTasksCompleted = dbTasksCompleted > 0 ? dbTasksCompleted : (tasksCompleted ?? 0);
 
         const scenario = scenarios.find(s => s.id === existingSession.scenario_id);
         const totalPossibleQuiz = scenario?.quiz?.length || 5;
