@@ -9,7 +9,7 @@ export async function GET() {
             return Response.json({ error: "Unauthorized" }, { status: 401 });
         }
 
-        const userId = session.user.id || (session.user as Record<string, string>).userId;
+        const userId = (session.user as any).id || (session.user as any).userId;
         if (!userId) {
             return Response.json(
                 { error: "User ID not found in session" },
