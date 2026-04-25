@@ -24,13 +24,15 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
     const router = useRouter();
 
     const [sessionData, setSessionData] = useState<SessionData | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         // Try to fetch real session data
         fetch(`/api/lab/session/${params.sessionId}`, { cache: "no-store" })
             .then(r => r.ok ? r.json() : null)
             .then(data => { if (data) setSessionData(data); })
-            .catch(() => null);
+            .catch(() => null)
+            .finally(() => setLoading(false));
     }, [params.sessionId]);
 
     // ── GRADE CALCULATION ENGINE (Fallback) ──
@@ -124,7 +126,7 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                             </div>
 
                             <div className="overall-grade-badge">
-                                OVERALL GRADE <b>{grade}</b>
+                                OVERALL GRADE <b>{loading ? "..." : grade}</b>
                             </div>
                         </div>
 
@@ -239,9 +241,9 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                                     <div className="mc-sub">Based on session activity</div>
                                 </div>
                                 <div className="metric-card grade-card">
-                                    <div className="mc-grade orbitron">{grade}</div>
+                                    <div className="mc-grade orbitron">{loading ? "—" : grade}</div>
                                     <div className="mc-label mono">OVERALL GRADE</div>
-                                    <p className="mc-desc">Good attack technique, improve stealth</p>
+                                    <p className="mc-desc">{loading ? "Syncing data..." : "Analysis complete"}</p>
                                 </div>
                             </div>
                         </section>

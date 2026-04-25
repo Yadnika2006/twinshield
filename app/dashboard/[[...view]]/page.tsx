@@ -252,17 +252,23 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               </div>
             ) : (
               <div className="scenario-grid">
-                {scenarios.map(scen => (
-                  <div key={scen.id} className="scenario-card">
-                    <h3 className="orbitron">{scen.name}</h3>
-                    <div className="tags">
-                      <span className="tag">{scen.type}</span>
-                      <span className="tag" style={{ borderColor: scen.diffColor, color: scen.diffColor }}>{scen.diff}</span>
+                {scenarios.map(scen => {
+                  const isCompleted = progressData?.labMap?.find((l: any) => l.id === scen.id)?.status === 'completed';
+                  return (
+                    <div key={scen.id} className={`scenario-card ${isCompleted ? 'completed-scen' : ''}`}>
+                      {isCompleted && <div className="solved-badge orbitron">SOLVED</div>}
+                      <h3 className="orbitron">{scen.name}</h3>
+                      <div className="tags">
+                        <span className="tag">{scen.type}</span>
+                        <span className="tag" style={{ borderColor: scen.diffColor, color: scen.diffColor }}>{scen.diff}</span>
+                      </div>
+                      <p className="desc">{scen.desc}</p>
+                      <button className="btn-launch" onClick={() => router.push(`/lab/${scen.id}?scenario=${scen.id}`)}>
+                        {isCompleted ? "▶ REPLAY LAB" : "▶ LAUNCH LAB"}
+                      </button>
                     </div>
-                    <p className="desc">{scen.desc}</p>
-                    <button className="btn-launch" onClick={() => router.push(`/lab/${scen.id}?scenario=${scen.id}`)}>▶ LAUNCH LAB</button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -691,6 +697,22 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
         .scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
         .scenario-card { background: rgba(0,0,0,0.3); border: 1px solid rgba(0,212,255,0.1); padding: 24px; display: flex; flex-direction: column; gap: 15px; position: relative; transition: 0.3s; }
         .scenario-card:hover { border-color: #00d4ff; transform: translateY(-3px); }
+        .scenario-card.completed-scen { border-color: #00ff8844; }
+        .scenario-card.completed-scen:hover { border-color: #00ff88; }
+        .solved-badge {
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          background: #00ff88;
+          color: #050f1c;
+          font-size: 0.6rem;
+          padding: 4px 8px;
+          font-weight: 900;
+          border-radius: 4px;
+          box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+          z-index: 5;
+          transform: rotate(5deg);
+        }
         .scenario-card.locked { opacity: 0.5; filter: grayscale(1); }
         .locked-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10; font-family: 'Orbitron'; color: #ff4444; }
         .tags { display: flex; gap: 10px; }
