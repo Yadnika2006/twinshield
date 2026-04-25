@@ -24,26 +24,56 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
     const router = useRouter();
 
     const [sessionData, setSessionData] = useState<SessionData | null>(null);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         // Try to fetch real session data
         fetch(`/api/lab/session/${params.sessionId}`, { cache: "no-store" })
             .then(r => r.ok ? r.json() : null)
             .then(data => { if (data) setSessionData(data); })
-            .catch(() => null);
+            .catch(() => null)
+            .finally(() => setLoading(false));
     }, [params.sessionId]);
 
-    // Derived display values — real data if available, fallback to defaults
+    // ── GRADE CALCULATION ENGINE (Fallback) ──
+    const calculateGrade = (score: number): string => {
+        if (score >= 90) return "S+";
+        if (score >= 80) return "A";
+        if (score >= 70) return "B+";
+        if (score >= 60) return "B";
+        if (score >= 45) return "C";
+        if (score >= 35) return "D";
+        return "F";
+    };
+
+    // Derived display values — real data if available, fallback to calculation
     const currentScenarioId = sessionData?.scenario_id || "";
     const currentScenario = scenarios.find(s => s.id === currentScenarioId);
     const scenarioName = currentScenario?.name || currentScenarioId || "Lab";
     const currentIndex = scenarios.findIndex(s => s.id === currentScenarioId);
     const nextScenario = currentIndex >= 0 && currentIndex < scenarios.length - 1 ? scenarios[currentIndex + 1] : scenarios[0];
-    const grade = sessionData?.grade || "—";
+    
     const attackerScore = sessionData?.attacker_score ?? 0;
     const defenderScore = sessionData?.defender_score ?? 0;
     const quizScore = sessionData?.quiz_score ?? 0;
     const tasksCompleted = sessionData?.tasks_completed ?? 0;
+
+    // Calculate overall score same as backend for consistency
+    const totalPossibleQuiz = currentScenario?.quiz?.length || 5;
+    const totalPossibleTasks = currentScenario?.tasks?.length || 5;
+
+    const quizPercent = (quizScore / totalPossibleQuiz) * 100;
+    const tasksPercent = (tasksCompleted / totalPossibleTasks) * 100;
+    
+    const overallScore = Math.round(
+        attackerScore * 0.3 +
+        defenderScore * 0.1 +
+        quizPercent * 0.3 +
+        tasksPercent * 0.3
+    );
+
+    const grade = sessionData?.grade || calculateGrade(overallScore);
+    
     const durationSec = sessionData?.duration_seconds ?? 0;
     const durationFmt = sessionData?.ended_at && durationSec > 0
         ? `${String(Math.floor(durationSec / 60)).padStart(2, '0')}:${String(durationSec % 60).padStart(2, '0')}`
@@ -96,7 +126,7 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                             </div>
 
                             <div className="overall-grade-badge">
-                                OVERALL GRADE <b>{grade}</b>
+                                OVERALL GRADE <b>{loading ? "..." : grade}</b>
                             </div>
                         </div>
 
@@ -192,16 +222,16 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                             <h2 className="orbitron">◈ SKILL ASSESSMENT</h2>
                             <div className="metrics-row">
                                 <div className="metric-card">
-                                    <div className="mc-val blue orbitron">{quizScore}/5</div>
+                                    <div className="mc-val blue orbitron">{quizScore}/{totalPossibleQuiz}</div>
                                     <div className="mc-label mono">QUIZ SCORE</div>
-                                    <div className="mc-bar-bg"><div className="mc-bar-fill blue-bg" style={{ width: `${(quizScore / 5) * 100}%` }}></div></div>
-                                    <div className={`mc-badge mono ${quizScore >= 3 ? 'green-bg' : 'orange-bg'}`}>{quizScore >= 3 ? 'PASS' : 'FAIL'}</div>
+                                    <div className="mc-bar-bg"><div className="mc-bar-fill blue-bg" style={{ width: `${(quizScore / totalPossibleQuiz) * 100}%` }}></div></div>
+                                    <div className={`mc-badge mono ${quizScore >= Math.ceil(totalPossibleQuiz * 0.6) ? 'green-bg' : 'orange-bg'}`}>{quizScore >= Math.ceil(totalPossibleQuiz * 0.6) ? 'PASS' : 'FAIL'}</div>
                                 </div>
                                 <div className="metric-card">
-                                    <div className="mc-val yellow orbitron">{tasksCompleted}/5</div>
+                                    <div className="mc-val yellow orbitron">{tasksCompleted}/{totalPossibleTasks}</div>
                                     <div className="mc-label mono">TASKS COMPLETE</div>
-                                    <div className="mc-bar-bg"><div className="mc-bar-fill yellow-bg" style={{ width: `${(tasksCompleted / 5) * 100}%` }}></div></div>
-                                    <div className={`mc-badge mono ${tasksCompleted >= 5 ? 'green-bg' : 'yellow-bg'}`}>{tasksCompleted >= 5 ? 'COMPLETE' : 'PARTIAL'}</div>
+                                    <div className="mc-bar-bg"><div className="mc-bar-fill yellow-bg" style={{ width: `${(tasksCompleted / totalPossibleTasks) * 100}%` }}></div></div>
+                                    <div className={`mc-badge mono ${tasksCompleted >= totalPossibleTasks ? 'green-bg' : 'yellow-bg'}`}>{tasksCompleted >= totalPossibleTasks ? 'COMPLETE' : 'PARTIAL'}</div>
                                 </div>
                                 <div className="metric-card">
                                     <div className="mc-val orange orbitron">{attackerScore}<span style={{ fontSize: '1rem' }}>/100</span></div>
@@ -211,9 +241,9 @@ export default function ReportPage({ params }: { params: { sessionId: string } }
                                     <div className="mc-sub">Based on session activity</div>
                                 </div>
                                 <div className="metric-card grade-card">
-                                    <div className="mc-grade orbitron">{grade}</div>
+                                    <div className="mc-grade orbitron">{loading ? "—" : grade}</div>
                                     <div className="mc-label mono">OVERALL GRADE</div>
-                                    <p className="mc-desc">Good attack technique, improve stealth</p>
+                                    <p className="mc-desc">{loading ? "Syncing data..." : "Analysis complete"}</p>
                                 </div>
                             </div>
                         </section>

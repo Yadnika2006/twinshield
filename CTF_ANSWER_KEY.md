@@ -219,3 +219,21 @@
 | 28 | USBdrop | Task 5 | `45` |
 | 29 | NetFlood | Task 2 | `10` |
 | 30 | NetFlood | Task 5 | `keeps connections open` |
+
+Here are the answers (flags) for all 5 challenges in the CTF arena:
+
+LoginBreaker (SQL Injection)
+
+Answer: FLAG{sql_bypass_admin}
+PhishMaster (Phishing / OSINT)
+
+Answer: FLAG{homograph_attack_detected}
+CookieMonster (Session Hijack)
+
+Answer: FLAG{session_fixation_pwned}
+XSSploit (Cross-Site Scripting)
+
+Answer: FLAG{xss_cookie_stolen}
+MitMBreaker (Man-in-the-Middle / Forensics)
+
+Answer: FLAG{arp_poison_cracked}

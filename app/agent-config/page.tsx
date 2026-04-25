@@ -8,6 +8,9 @@ import {
     defaultAgentSettings,
     sanitizeAgentSettings,
     type AgentSettings,
+    type MentorTeachingMode,
+    type MentorPersonality,
+    type DefenseMode,
 } from "@/lib/agents/settings";
 
 export default function AgentConfigPage() {
@@ -230,7 +233,7 @@ export default function AgentConfigPage() {
                                                 <div
                                                     key={opt.id}
                                                     className={`rp-item ${teachingMode === opt.id ? 'sel-purple' : ''}`}
-                                                    onClick={() => setTeachingMode(opt.id)}
+                                                    onClick={() => setTeachingMode(opt.id as MentorTeachingMode)}
                                                 >
                                                     <span className="rp-radio">{teachingMode === opt.id ? '●' : '○'}</span>
                                                     <div>
@@ -299,7 +302,7 @@ export default function AgentConfigPage() {
                                                 <div
                                                     key={opt.id}
                                                     className="rc-row"
-                                                    onClick={() => setMentorPersonality(opt.id)}
+                                                    onClick={() => setMentorPersonality(opt.id as MentorPersonality)}
                                                 >
                                                     <span className={`rc-dot ${mentorPersonality === opt.id ? 'purple-dot' : ''}`}>
                                                         {mentorPersonality === opt.id ? '●' : '○'}
@@ -354,7 +357,7 @@ export default function AgentConfigPage() {
                                                 <div
                                                     key={opt.id}
                                                     className={`rp-item ${defenceMode === opt.id ? 'sel-green' : ''}`}
-                                                    onClick={() => setDefenceMode(opt.id)}
+                                                    onClick={() => setDefenceMode(opt.id as DefenseMode)}
                                                 >
                                                     <span className="rp-radio">{defenceMode === opt.id ? '●' : '○'}</span>
                                                     <div>

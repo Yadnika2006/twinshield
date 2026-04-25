@@ -210,7 +210,7 @@ export default function ReportsHubPage() {
                         </div>
                         <div className="rp-filter-group">
                             <span className="mono" style={{ color: '#6b86a0', fontSize: '0.8rem' }}>GRADE:</span>
-                            {["ALL", "A", "B", "C", "D"].map(f => (
+                            {["ALL", "S+", "A", "B", "C", "D"].map(f => (
                                 <button key={f} className={`rp-filter-btn mono ${filterGrade === f ? 'active' : ''}`}
                                     onClick={() => setFilterGrade(f)}>{f}</button>
                             ))}

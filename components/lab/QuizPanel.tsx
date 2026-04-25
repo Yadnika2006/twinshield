@@ -1,7 +1,15 @@
 "use client";
 
 import { useState } from "react";
-import { quizData, QuizQuestion } from "@/lib/quiz-data";
+import { getScenario } from "@/lib/scenarios";
+
+interface QuizQuestion {
+    id: number;
+    question: string;
+    options: string[];
+    correctIndex: number;
+    explanation: string;
+}
 
 interface Props {
     scenarioId: string;
@@ -12,8 +20,8 @@ interface Props {
 const OPTION_LABELS = ["A", "B", "C", "D"];
 
 export default function QuizPanel({ scenarioId, sessionId, onComplete }: Props) {
-    const scenarioQuiz = quizData.find(s => s.scenarioId === scenarioId);
-    const questions = scenarioQuiz?.questions || [];
+    const scenario = getScenario(scenarioId);
+    const questions: QuizQuestion[] = scenario?.quiz || [];
 
     const [currentQuestionIdx, setCurrentQuestionIdx] = useState(0);
     const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
@@ -63,29 +71,35 @@ export default function QuizPanel({ scenarioId, sessionId, onComplete }: Props) 
         setSubmitted(true);
         setShowResults(true);
 
-        try {
-            await fetch('/api/quiz/submit', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    sessionId,
-                    scenarioId,
-                    answers: submitPayload
-                })
-            });
-        } catch (error) {
-            console.error("Failed to submit quiz results:", error);
-        } finally {
-            setLoading(false);
+        // Only submit to API if sessionId looks like a valid UUID (not a scenario slug)
+        if (sessionId && sessionId.includes('-')) {
+            try {
+                const res = await fetch('/api/quiz/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        sessionId,
+                        scenarioId,
+                        answers: submitPayload
+                    })
+                });
+                if (!res.ok) {
+                    console.warn("Quiz submit API returned", res.status);
+                }
+            } catch (error) {
+                console.error("Failed to submit quiz results:", error);
+            }
         }
+        setLoading(false);
     };
 
     const getGradeInfo = (s: number) => {
-        if (s === 5) return { label: "S+ PERFECT", color: "#FFD700", bg: "rgba(255,215,0,0.1)", xp: 100 };
-        if (s === 4) return { label: "A EXCELLENT", color: "#00ff88", bg: "rgba(0,255,136,0.1)", xp: 80 };
-        if (s === 3) return { label: "B GOOD", color: "#00d4ff", bg: "rgba(0,212,255,0.1)", xp: 60 };
-        if (s === 2) return { label: "C AVERAGE", color: "#FFCC00", bg: "rgba(255,204,0,0.1)", xp: 40 };
-        if (s === 1) return { label: "D NEEDS WORK", color: "#FF8800", bg: "rgba(255,136,0,0.1)", xp: 20 };
+        const total = questions.length;
+        if (s === total) return { label: "S+ PERFECT", color: "#FFD700", bg: "rgba(255,215,0,0.1)", xp: 100 };
+        if (s >= total * 0.8) return { label: "A EXCELLENT", color: "#00ff88", bg: "rgba(0,255,136,0.1)", xp: 80 };
+        if (s >= total * 0.6) return { label: "B GOOD", color: "#00d4ff", bg: "rgba(0,212,255,0.1)", xp: 60 };
+        if (s >= total * 0.4) return { label: "C AVERAGE", color: "#FFCC00", bg: "rgba(255,204,0,0.1)", xp: 40 };
+        if (s >= total * 0.2) return { label: "D NEEDS WORK", color: "#FF8800", bg: "rgba(255,136,0,0.1)", xp: 20 };
         return { label: "F RETRY", color: "#ff4444", bg: "rgba(255,68,68,0.1)", xp: 0 };
     };
 
@@ -104,7 +118,7 @@ export default function QuizPanel({ scenarioId, sessionId, onComplete }: Props) 
                         <div className="grade-section mt-6">
                             <div className="grade-row">
                                 <div className="grade-score orbitron" style={{ color: grade.color }}>
-                                    {score}/5
+                                    {score}/{questions.length}
                                 </div>
                                 <div className="grade-details">
                                     <div className="grade-badge orbitron" style={{ background: grade.bg, color: grade.color, borderColor: grade.color }}>
@@ -188,14 +202,14 @@ export default function QuizPanel({ scenarioId, sessionId, onComplete }: Props) 
                             <div className="progress-text">
                                 <span className="orbitron current-num">0{currentQuestionIdx + 1}</span>
                                 <span className="divider font-mono">/</span>
-                                <span className="total-num font-mono">05</span>
+                                <span className="total-num font-mono">{String(questions.length).padStart(2, '0')}</span>
                             </div>
                         </div>
                         <div className="progress-bar-bg">
                             <div 
                                 className="progress-bar-fill" 
                                 style={{ 
-                                    width: `${((currentQuestionIdx + 1) / 5) * 100}%`
+                                    width: `${((currentQuestionIdx + 1) / questions.length) * 100}%`
                                 }}
                             />
                         </div>

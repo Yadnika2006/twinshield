@@ -125,11 +125,26 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               <div className="glass-panel stat-card">
                 <h3 className="card-label">// RECENT BADGE</h3>
                 <div className="badge-display">
-                  <span className="badge-icon glow" style={{ display: 'inline-flex', alignItems: 'center' }}><Target size={32} /></span>
-                  <div className="badge-info">
-                    <span className="b-name">First Blood</span>
-                    <span className="b-date">earned today</span>
-                  </div>
+                  {statsLoading ? (
+                    <div className="skeleton" style={{ height: 40, width: '100%' }} />
+                  ) : userStats?.badges?.length > 0 ? (() => {
+                    const recent = [...userStats.badges].sort((a: any, b: any) => new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime())[0];
+                    const details = ALL_BADGES.find(b => b.id === recent.badge_id);
+                    return (
+                      <>
+                        <span className="badge-icon glow" style={{ display: 'inline-flex', alignItems: 'center' }}>{details?.icon || <Target size={32} />}</span>
+                        <div className="badge-info">
+                          <span className="b-name">{details?.name || recent.badge_id}</span>
+                          <span className="b-date">earned {new Date(recent.earned_at).toLocaleDateString()}</span>
+                        </div>
+                      </>
+                    );
+                  })() : (
+                    <div className="badge-info">
+                      <span className="b-name" style={{ color: '#6b86a0' }}>NONE YET</span>
+                      <span className="b-date">Complete labs to earn</span>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -138,8 +153,8 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
                 <div className="streak-display">
                   <span className="streak-icon" style={{ display: 'inline-flex', alignItems: 'center', color: '#ff9900' }}><Flame size={32} /></span>
                   <div className="streak-info">
-                    <span className="s-val">5 DAY STREAK</span>
-                    <span className="s-sub">KEEP IT UP, OPERATOR</span>
+                    <span className="s-val">{statsLoading ? "..." : `${userStats?.streak ?? 0} DAY STREAK`}</span>
+                    <span className="s-sub">{userStats?.streak > 0 ? "KEEP IT UP, OPERATOR" : "START YOUR JOURNEY TODAY"}</span>
                   </div>
                 </div>
               </div>
@@ -176,18 +191,32 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
             </div>
 
             {/* 5. RECOMMENDED NEXT LAB */}
-            <div className="recommended-card glass-panel shimmer-blue">
-              <div className="rec-content">
-                <h2 className="orbitron pink-glow">◈ CONTINUE YOUR JOURNEY</h2>
-                <p className="rec-sub">Based on your recent SQLi success, we recommend <b>PhishNet</b> to expand your initial access toolkit.</p>
-                <div className="rec-meta">
-                  <span>TARGET: Generic Corp</span>
-                  <span>|</span>
-                  <span>EST: 45 MIN</span>
+            {(() => {
+              // Find the first lab that isn't 'completed' in the progress data
+              const nextLab = progressData?.labMap?.find((l: any) => l.status !== 'completed') || allScenarios[0];
+              
+              return (
+                <div className="recommended-card glass-panel shimmer-blue">
+                  <div className="rec-content">
+                    <h2 className="orbitron pink-glow">◈ CONTINUE YOUR JOURNEY</h2>
+                    <p className="rec-sub">
+                      {progressData?.labMap?.some((l: any) => l.status === 'completed') 
+                        ? `Great work on your last mission! We recommend ` 
+                        : `Welcome, Operator. Start your journey with `}
+                      <b style={{ color: '#00d4ff' }}>{nextLab.name}</b> to advance your skills in {nextLab.type || nextLab.category}.
+                    </p>
+                    <div className="rec-meta">
+                      <span style={{ color: nextLab.diffColor || '#00ff88' }}>DIFFICULTY: {nextLab.diff || 'Beginner'}</span>
+                      <span>|</span>
+                      <span>CATEGORY: {nextLab.type || 'General'}</span>
+                    </div>
+                  </div>
+                  <button className="btn-launch-big" onClick={() => router.push(`/lab/${nextLab.id}?scenario=${nextLab.id}`)}>
+                    ▶ LAUNCH {nextLab.name.toUpperCase()}
+                  </button>
                 </div>
-              </div>
-              <button className="btn-launch-big" onClick={() => router.push("/lab/phish-01?scenario=phish-01")}>▶ LAUNCH LAB</button>
-            </div>
+              );
+            })()}
 
             {/* 6. CTF TEASER STRIP */}
             <div className="ctf-teaser-strip" onClick={() => router.push("/ctf")}>
@@ -223,17 +252,23 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               </div>
             ) : (
               <div className="scenario-grid">
-                {scenarios.map(scen => (
-                  <div key={scen.id} className="scenario-card">
-                    <h3 className="orbitron">{scen.name}</h3>
-                    <div className="tags">
-                      <span className="tag">{scen.type}</span>
-                      <span className="tag" style={{ borderColor: scen.diffColor, color: scen.diffColor }}>{scen.diff}</span>
+                {scenarios.map(scen => {
+                  const isCompleted = progressData?.labMap?.find((l: any) => l.id === scen.id)?.status === 'completed';
+                  return (
+                    <div key={scen.id} className={`scenario-card ${isCompleted ? 'completed-scen' : ''}`}>
+                      {isCompleted && <div className="solved-badge orbitron">SOLVED</div>}
+                      <h3 className="orbitron">{scen.name}</h3>
+                      <div className="tags">
+                        <span className="tag">{scen.type}</span>
+                        <span className="tag" style={{ borderColor: scen.diffColor, color: scen.diffColor }}>{scen.diff}</span>
+                      </div>
+                      <p className="desc">{scen.desc}</p>
+                      <button className="btn-launch" onClick={() => router.push(`/lab/${scen.id}?scenario=${scen.id}`)}>
+                        {isCompleted ? "▶ REPLAY LAB" : "▶ LAUNCH LAB"}
+                      </button>
                     </div>
-                    <p className="desc">{scen.desc}</p>
-                    <button className="btn-launch" onClick={() => router.push(`/lab/${scen.id}?scenario=${scen.id}`)}>▶ LAUNCH LAB</button>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
@@ -256,6 +291,30 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               </div>
             ) : (
               <>
+                {/* ── CERTIFICATE BANNER ── */}
+                <div className={`certificate-banner glass-panel ${!progressData.isEligibleForCertificate ? 'locked' : ''}`}>
+                  <div className="cert-info">
+                    <span className="cert-icon">{progressData.isEligibleForCertificate ? '🏅' : '🔒'}</span>
+                    <div className="cert-text">
+                      <h3 className="orbitron">
+                        {progressData.isEligibleForCertificate ? "CONGRATULATIONS, OPERATOR" : "CERTIFICATE LOCKED"}
+                      </h3>
+                      <p className="mono">
+                        {progressData.isEligibleForCertificate 
+                          ? "You have successfully completed all Lab Scenarios and CTF Challenges." 
+                          : "Complete all Lab Scenarios and CTF Challenges to unlock your certificate."}
+                      </p>
+                    </div>
+                  </div>
+                  <button 
+                    className="btn-cert" 
+                    onClick={() => progressData.isEligibleForCertificate && router.push('/certificate')}
+                    disabled={!progressData.isEligibleForCertificate}
+                  >
+                    {progressData.isEligibleForCertificate ? 'CLAIM CERTIFICATE' : 'LOCKED'}
+                  </button>
+                </div>
+
                 {/* ── ROW 1: Level & Stats ── */}
                 <div className="glass-panel stat-card">
                   <h3 className="card-label">// LEVEL & XP</h3>
@@ -469,26 +528,65 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
               <table className="lb-table">
                 <thead><tr><th>RANK</th><th>OPERATOR</th><th>SCORE</th><th>LEVEL</th><th>STATUS</th></tr></thead>
                 <tbody>
-                  {leaderboard.length > 0 ? leaderboard.map((entry: any, i: number) => (
-                    <tr key={i} className={entry.user_id === (session?.user as any)?.id ? 'highlight' : ''}>
-                      <td>#{i + 1}</td>
-                      <td>{entry.name || `OPERATOR_${100 + i}`}</td>
-                      <td>{entry.score ?? 0}</td>
-                      <td>LV{entry.level ?? 1}</td>
-                      <td><span className="pulse-dot-sm">●</span> ONLINE</td>
+                  {leaderboard.length > 0 ? (
+                    <>
+                      {leaderboard.map((entry: any, i: number) => {
+                        const rank = entry.rank || i + 1;
+                        const isTop3 = rank <= 3;
+                        const rankColor = rank === 1 ? "#ffd700" : rank === 2 ? "#c0c0c0" : rank === 3 ? "#cd7f32" : "inherit";
+                        
+                        return (
+                          <tr key={i} className={`${entry.user_id === (session?.user as any)?.id ? 'highlight' : ''} ${isTop3 ? 'top-rank' : ''}`}>
+                            <td style={{ color: rankColor, fontWeight: isTop3 ? 'bold' : 'normal' }}>
+                              <span style={{ fontSize: isTop3 ? '1.5rem' : '1rem' }}>
+                                {rank === 1 ? "🥇" : rank === 2 ? "🥈" : rank === 3 ? "🥉" : `#${rank}`}
+                              </span>
+                            </td>
+                            <td>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <span className={isTop3 ? 'orbitron' : ''}>{entry.name || `OPERATOR_${String(entry.user_id).slice(0, 4).toUpperCase()}`}</span>
+                                {isTop3 && (
+                                  <span className="mono" style={{ 
+                                    fontSize: '0.65rem', 
+                                    padding: '2px 6px', 
+                                    borderRadius: '4px', 
+                                    backgroundColor: 'rgba(255,255,255,0.1)',
+                                    border: `1px solid ${rankColor}`,
+                                    color: rankColor
+                                  }}>
+                                    {rank === 1 ? "ELITE" : "PRO"}
+                                  </span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="orbitron" style={{ color: '#00d4ff' }}>{entry.score ?? 0}</td>
+                            <td><span className="mono">LV{entry.level ?? 1}</span></td>
+                            <td><span className="pulse-dot-sm">●</span> ONLINE</td>
+                          </tr>
+                        );
+                      })}
+                      {/* Personal Rank Sticky Footer (only if not already in the visible list) */}
+                      {!leaderboard.some((e: any) => e.user_id === (session?.user as any)?.id) && userStats && (
+                        <tr className="highlight sticky-rank">
+                          <td>#{userStats.rank || "—"}</td>
+                          <td>{session?.user?.name || "YOU"} (YOU)</td>
+                          <td>{userStats.totalScore || 0}</td>
+                          <td>LV{userStats.level || 1}</td>
+                          <td><span className="pulse-dot-sm">●</span> ONLINE</td>
+                        </tr>
+                      )}
+                    </>
+                  ) : (
+                    <tr>
+                      <td colSpan={5} style={{ textAlign: 'center', padding: '40px', color: '#6b86a0', fontFamily: 'Share Tech Mono' }}>
+                        NO OPERATORS RANKED YET. BE THE FIRST!
+                      </td>
                     </tr>
-                  )) : [...Array(10)].map((_, i) => (
-                    <tr key={i} className={i === 6 ? 'highlight' : ''}>
-                      <td>#{i + 1}</td>
-                      <td>OPERATOR_{100 + i}</td>
-                      <td>{3000 - (i * 200)}</td>
-                      <td>LV{5 - Math.floor(i / 2)}</td>
-                      <td><span className="pulse-dot-sm">●</span> ONLINE</td>
-                    </tr>
-                  ))}
+                  )}
                 </tbody>
               </table>
             </div>
+
           </div>
         )}
 
@@ -599,6 +697,22 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
         .scenario-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
         .scenario-card { background: rgba(0,0,0,0.3); border: 1px solid rgba(0,212,255,0.1); padding: 24px; display: flex; flex-direction: column; gap: 15px; position: relative; transition: 0.3s; }
         .scenario-card:hover { border-color: #00d4ff; transform: translateY(-3px); }
+        .scenario-card.completed-scen { border-color: #00ff8844; }
+        .scenario-card.completed-scen:hover { border-color: #00ff88; }
+        .solved-badge {
+          position: absolute;
+          top: -10px;
+          right: -10px;
+          background: #00ff88;
+          color: #050f1c;
+          font-size: 0.6rem;
+          padding: 4px 8px;
+          font-weight: 900;
+          border-radius: 4px;
+          box-shadow: 0 0 10px rgba(0, 255, 136, 0.4);
+          z-index: 5;
+          transform: rotate(5deg);
+        }
         .scenario-card.locked { opacity: 0.5; filter: grayscale(1); }
         .locked-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.6); display: flex; align-items: center; justify-content: center; z-index: 10; font-family: 'Orbitron'; color: #ff4444; }
         .tags { display: flex; gap: 10px; }
@@ -612,9 +726,30 @@ export default function DashboardPage({ params }: { params?: { view?: string[] }
         .lb-table th { padding: 15px; color: #6b86a0; border-bottom: 1px solid rgba(0,212,255,0.2); }
         .lb-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .lb-table tr.highlight { background: rgba(0, 255, 136, 0.1); color: #00ff88; font-weight: bold; }
+        .sticky-rank {
+          position: sticky;
+          bottom: 0;
+          background: rgba(0, 255, 136, 0.2) !important;
+          border-top: 2px solid #00ff88 !important;
+          backdrop-filter: blur(10px);
+          z-index: 10;
+        }
         .pulse-dot-sm { color: #00ff88; animation: pulse 2s infinite; font-size: 0.7rem; }
 
         /* ─── PROGRESS PAGE STYLES ─── */
+        .certificate-banner { display: flex; justify-content: space-between; align-items: center; border-color: #00ff88; box-shadow: 0 0 20px rgba(0, 255, 136, 0.2); background: linear-gradient(90deg, rgba(0,255,136,0.05), rgba(0,0,0,0)); margin-bottom: 20px; transition: 0.3s ease; }
+        .cert-info { display: flex; align-items: center; gap: 20px; }
+        .cert-icon { font-size: 3rem; filter: drop-shadow(0 0 10px rgba(0, 255, 136, 0.6)); }
+        .cert-text h3 { margin: 0; color: #00ff88; font-size: 1.2rem; text-shadow: 0 0 5px rgba(0, 255, 136, 0.5); }
+        .cert-text p { margin: 5px 0 0 0; color: #c8e6f0; font-size: 0.9rem; }
+        .btn-cert { background: linear-gradient(90deg, #00ff88, #00d4ff); color: #050f1c; font-family: 'Orbitron'; font-weight: bold; border: none; padding: 12px 24px; cursor: pointer; transition: 0.3s; clip-path: polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px); }
+        .btn-cert:hover { box-shadow: 0 0 15px rgba(0, 255, 136, 0.4); transform: translateY(-2px); }
+
+        .certificate-banner.locked { border-color: rgba(255,255,255,0.1); box-shadow: none; background: rgba(0,0,0,0.2); opacity: 0.6; filter: grayscale(50%); }
+        .certificate-banner.locked .cert-icon { filter: grayscale(100%) opacity(0.5); font-size: 2.5rem; padding-left: 5px; }
+        .certificate-banner.locked .cert-text h3 { color: #6b86a0; text-shadow: none; }
+        .certificate-banner.locked .btn-cert { background: rgba(255,255,255,0.05); color: #6b86a0; cursor: not-allowed; box-shadow: none; transform: none; }
+
         .progress-stats-row-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
         .progress-stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
 

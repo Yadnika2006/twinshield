@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "@/lib/auth";
 import { supabaseAdmin } from "@/lib/supabase-admin";
-import { getUserById, getUserBadges } from "@/lib/db";
+import { getUserById, getUserBadges, getUserCTFStats } from "@/lib/db";
 
 // Scenario metadata for mapping
 const SCENARIO_META: Record<string, { name: string; type: string; diff: string; category: string }> = {
@@ -33,21 +33,20 @@ export async function GET() {
         return NextResponse.json({ error: "User ID not found" }, { status: 401 });
     }
 
-    // Fetch user info
-    const user = await getUserById(userId);
+    // Fetch all required data in parallel
+    const [user, allSessionsResult, badges, ctfStats] = await Promise.all([
+        getUserById(userId),
+        supabaseAdmin
+            .from("lab_sessions")
+            .select("id, scenario_id, attacker_score, defender_score, quiz_score, tasks_completed, grade, started_at, ended_at, duration_seconds")
+            .eq("user_id", userId)
+            .not("ended_at", "is", null)
+            .order("started_at", { ascending: false }),
+        getUserBadges(userId),
+        getUserCTFStats(userId),
+    ]);
 
-    // Fetch ALL sessions for this user (not just recent 5)
-    const { data: allSessions } = await supabaseAdmin
-        .from("lab_sessions")
-        .select("id, scenario_id, attacker_score, defender_score, quiz_score, tasks_completed, grade, started_at, ended_at, duration_seconds")
-        .eq("user_id", userId)
-        .not("ended_at", "is", null)
-        .order("started_at", { ascending: false });
-
-    const sessions = allSessions || [];
-
-    // Fetch badges
-    const badges = await getUserBadges(userId);
+    const sessions = allSessionsResult.data || [];
 
     // ── Compute skill radar values ──
     const categoryScores: Record<string, number[]> = {
@@ -127,12 +126,16 @@ export async function GET() {
     const strengths = scenarioAvgs.slice(0, 3);
     const weaknesses = scenarioAvgs.slice(-3).reverse();
 
+    const isEligibleForCertificate = labMap.every(l => l.status === "completed") && ctfStats.totalSolved >= 5;
+
     return NextResponse.json({
         user: {
             level: user?.level || 1,
             xp: user?.xp || 0,
             score: user?.score || 0,
+            name: user?.name || "Operator",
         },
+        isEligibleForCertificate,
         radar,
         labMap,
         sessions,

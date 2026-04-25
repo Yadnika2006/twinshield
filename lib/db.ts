@@ -64,16 +64,83 @@ export async function updateUserXP(userId: string, xpToAdd: number) {
     return data;
 }
 
-export async function getUserStats(userId: string) {
-    // Total sessions
-    const { count: totalSessions } = await supabaseAdmin
+async function calculateUserStreak(userId: string) {
+    const { data: sessions } = await supabaseAdmin
         .from("lab_sessions")
-        .select("*", { count: "exact", head: true })
+        .select("started_at")
         .eq("user_id", userId)
-        .not("ended_at", "is", null);
+        .not("ended_at", "is", null)
+        .order("started_at", { ascending: false });
 
-    // User data for level, xp, score
-    const user = await getUserById(userId);
+    if (!sessions || sessions.length === 0) return 0;
+
+    // Extract unique dates in YYYY-MM-DD format
+    const dates = sessions.map(s => {
+        try {
+            return new Date(s.started_at).toISOString().split("T")[0];
+        } catch {
+            return null;
+        }
+    }).filter(d => d !== null) as string[];
+    
+    const uniqueDates = Array.from(new Set(dates));
+    if (uniqueDates.length === 0) return 0;
+
+    const today = new Date().toISOString().split("T")[0];
+    const yesterdayDate = new Date();
+    yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+    const yesterday = yesterdayDate.toISOString().split("T")[0];
+
+    // If the latest activity is not today OR yesterday, official streak is dead
+    if (uniqueDates[0] !== today && uniqueDates[0] !== yesterday) {
+        return 0;
+    }
+
+    let streak = 1;
+    let currentDate = new Date(uniqueDates[0]);
+
+    for (let i = 1; i < uniqueDates.length; i++) {
+        const nextDate = new Date(uniqueDates[i]);
+        const diffTime = Math.abs(currentDate.getTime() - nextDate.getTime());
+        const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 1) {
+            streak++;
+            currentDate = nextDate;
+        } else {
+            break;
+        }
+    }
+
+    return streak;
+}
+
+export async function getUserStats(userId: string) {
+    // Fetch all core stats in parallel to reduce latency
+    const [statsResult, user, badges] = await Promise.all([
+        supabaseAdmin
+            .from("lab_sessions")
+            .select("*", { count: "exact", head: true })
+            .eq("user_id", userId)
+            .not("ended_at", "is", null),
+        getUserById(userId),
+        supabaseAdmin
+            .from("user_badges")
+            .select("badge_id, earned_at")
+            .eq("user_id", userId),
+    ]);
+
+    const totalSessions = statsResult.count || 0;
+
+    // Optimized Rank calculation: count users with higher scores
+    let rank = null;
+    if (user?.score != null) {
+        const { count: higherCount } = await supabaseAdmin
+            .from("users")
+            .select("*", { count: "exact", head: true })
+            .gt("score", user.score);
+        rank = (higherCount ?? 0) + 1;
+    }
 
     // Recent sessions (last 5)
     const { data: recentSessions } = await supabaseAdmin
@@ -84,33 +151,16 @@ export async function getUserStats(userId: string) {
         .order("started_at", { ascending: false })
         .limit(5);
 
-    // Get rank from leaderboard view
-    let rank: number | null = null;
-    try {
-        const { data: lb } = await supabaseAdmin
-            .from("leaderboard")
-            .select("*");
-        if (lb) {
-            const myIndex = lb.findIndex((r: { user_id?: string; id?: string }) => r.user_id === userId || r.id === userId);
-            rank = myIndex >= 0 ? myIndex + 1 : null;
-        }
-    } catch {
-        rank = null;
-    }
-
-    // Badges
-    const { data: badges } = await supabaseAdmin
-        .from("user_badges")
-        .select("badge_id, earned_at")
-        .eq("user_id", userId);
+    const streak = await calculateUserStreak(userId);
 
     return {
-        totalSessions: totalSessions || 0,
+        totalSessions,
         totalScore: user?.score || 0,
         level: user?.level || 1,
         xp: user?.xp || 0,
         rank,
-        badges: badges || [],
+        streak,
+        badges: badges.data || [],
         recentSessions: recentSessions || [],
     };
 }
@@ -401,6 +451,9 @@ export async function getLeaderboard(limit: number = 20) {
     const { data, error } = await supabaseAdmin
         .from("leaderboard")
         .select("*")
+        .order("score", { ascending: false })
+        .order("level", { ascending: false })
+        .order("xp", { ascending: false })
         .limit(limit);
 
     if (error) {
@@ -409,8 +462,17 @@ export async function getLeaderboard(limit: number = 20) {
             .from("users")
             .select("id, name, score, level, xp")
             .order("score", { ascending: false })
+            .order("level", { ascending: false })
+            .order("xp", { ascending: false })
             .limit(limit);
-        return (users || []).map((u: { id: string; name: string; score: number; level: number; xp: number }, i: number) => ({ ...u, rank: i + 1 }));
+        return (users || []).map((u: any, i: number) => ({
+            user_id: u.id,
+            name: u.name,
+            score: u.score,
+            level: u.level,
+            xp: u.xp,
+            rank: i + 1
+        }));
     }
 
     return data || [];

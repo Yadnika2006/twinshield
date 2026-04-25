@@ -443,12 +443,12 @@ export default function LabPage({ params }: { params: { sessionId: string } }) {
                                 <h2 className="sec-title green">◈ MISSION TASKS</h2>
                                 <div className="overall-progress">
                                     <span className="mono prog-label">
-                                        {completedTasks.length} / 5 TASKS COMPLETE
+                                    {completedTasks.length} / {TASKS_TOTAL} TASKS COMPLETE
                                     </span>
                                     <div className="prog-bg">
                                         <div
                                             className="prog-fill"
-                                            style={{ width: `${(completedTasks.length / 5) * 100}%` }}
+                                            style={{ width: `${(completedTasks.length / TASKS_TOTAL) * 100}%` }}
                                         />
                                     </div>
                                 </div>

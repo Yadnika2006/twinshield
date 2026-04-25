@@ -61,17 +61,46 @@ export default function WeakPassVictim({ currentScreen, onInteraction }: Props) 
                     
                     <div style={{ marginTop: 'auto' }}>
                         {currentScreen === 'ssh-terminal' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                <div>
-                                    <span>login as: </span>
-                                    <span style={{ animation: 'blink 1s step-start infinite' }}>█</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <span style={{ whiteSpace: 'nowrap', color: '#9ca3af' }}>login:</span>
+                                    <input 
+                                        type="text"
+                                        autoFocus
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                const target = e.currentTarget.parentElement?.nextElementSibling?.querySelector('input');
+                                                target?.focus();
+                                            }
+                                        }}
+                                        style={{ background: 'transparent', border: 'none', outline: 'none', color: '#fff', font: 'inherit', width: '100%', padding: 0 }}
+                                    />
                                 </div>
-                                <button 
-                                    onClick={() => onInteraction?.('connect-ssh')}
-                                    style={{ alignSelf: 'flex-start', background: '#374151', color: '#fff', border: '1px solid #4b5563', padding: '4px 12px', fontSize: '0.75rem', cursor: 'pointer', borderRadius: 2 }}
-                                >
-                                    Connect
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <span style={{ whiteSpace: 'nowrap', color: '#9ca3af' }}>password:</span>
+                                    <input 
+                                        type="password"
+                                        onKeyDown={(e) => {
+                                            if (e.key === 'Enter') {
+                                                const pass = e.currentTarget.value;
+                                                const userInput = e.currentTarget.parentElement?.previousElementSibling?.querySelector('input') as HTMLInputElement;
+                                                const user = userInput.value;
+                                                
+                                                if (user === 'admin' && pass === 'server123') {
+                                                    onInteraction?.('connect-ssh');
+                                                } else {
+                                                    alert('SSH Error: Permission denied. Verify credentials in your attacker terminal.');
+                                                    e.currentTarget.value = '';
+                                                    userInput.focus();
+                                                }
+                                            }
+                                        }}
+                                        style={{ background: 'transparent', border: 'none', outline: 'none', color: '#fff', font: 'inherit', width: '100%', padding: 0 }}
+                                    />
+                                </div>
+                                <div style={{ marginTop: 12, fontSize: '0.65rem', color: '#4b5563', fontStyle: 'italic', borderTop: '1px solid #1f2937', paddingTop: 8 }}>
+                                    Hint: Crack the password using Hydra on port 22.
+                                </div>
                             </div>
                         )}
                         {currentScreen === 'brute-attempts' && (
