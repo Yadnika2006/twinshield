@@ -452,6 +452,8 @@ export async function getLeaderboard(limit: number = 20) {
         .from("leaderboard")
         .select("*")
         .order("score", { ascending: false })
+        .order("level", { ascending: false })
+        .order("xp", { ascending: false })
         .limit(limit);
 
     if (error) {
@@ -460,6 +462,8 @@ export async function getLeaderboard(limit: number = 20) {
             .from("users")
             .select("id, name, score, level, xp")
             .order("score", { ascending: false })
+            .order("level", { ascending: false })
+            .order("xp", { ascending: false })
             .limit(limit);
         return (users || []).map((u: any, i: number) => ({
             user_id: u.id,
