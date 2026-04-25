@@ -259,7 +259,7 @@ export default function CtfPage() {
             setChallengeProgress((prev) => {
               const updated = { ...prev };
               for (const attempt of progress) {
-                const challengeId = attempt.challenge_id;
+                const challengeId = attempt.challenge_id as keyof typeof updated;
                 if (updated[challengeId]) {
                   updated[challengeId] = {
                     ...updated[challengeId],

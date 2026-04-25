@@ -32,7 +32,7 @@ function getStore(): RateLimitStore {
 }
 
 function cleanupExpiredEntries(now: number, store: RateLimitStore): void {
-    for (const [key, value] of store.entries()) {
+    for (const [key, value] of Array.from(store.entries())) {
         if (value.resetAt <= now) {
             store.delete(key);
         }
