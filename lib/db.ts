@@ -447,35 +447,45 @@ export async function getUserBadges(userId: string) {
 // ─────────────────────────────────────────────
 
 export async function getLeaderboard(limit: number = 20) {
-    // Try leaderboard view first, fall back to users table sorted by score
-    const { data, error } = await supabaseAdmin
-        .from("leaderboard")
-        .select("*")
+    // Query all users ordered by score, level, then xp
+    const { data: users, error } = await supabaseAdmin
+        .from("users")
+        .select("id, name, score, level, xp")
         .order("score", { ascending: false })
         .order("level", { ascending: false })
         .order("xp", { ascending: false })
         .limit(limit);
 
-    if (error) {
-        // Fallback: query users table directly
-        const { data: users } = await supabaseAdmin
-            .from("users")
-            .select("id, name, score, level, xp")
-            .order("score", { ascending: false })
-            .order("level", { ascending: false })
-            .order("xp", { ascending: false })
-            .limit(limit);
-        return (users || []).map((u: any, i: number) => ({
-            user_id: u.id,
-            name: u.name,
-            score: u.score,
-            level: u.level,
-            xp: u.xp,
-            rank: i + 1
-        }));
+    if (error || !users) {
+        console.error("Leaderboard query failed:", error);
+        return [];
     }
 
-    return data || [];
+    // Fetch completed session counts for all returned users in one query
+    const userIds = users.map((u: any) => u.id);
+    const { data: sessionCounts } = await supabaseAdmin
+        .from("lab_sessions")
+        .select("user_id")
+        .in("user_id", userIds)
+        .not("ended_at", "is", null);
+
+    // Count sessions per user
+    const countMap: Record<string, number> = {};
+    if (sessionCounts) {
+        for (const row of sessionCounts) {
+            countMap[row.user_id] = (countMap[row.user_id] || 0) + 1;
+        }
+    }
+
+    return users.map((u: any, i: number) => ({
+        user_id: u.id,
+        name: u.name,
+        score: u.score ?? 0,
+        level: u.level ?? 1,
+        xp: u.xp ?? 0,
+        rank: i + 1,
+        total_sessions: countMap[u.id] || 0,
+    }));
 }
 
 // ─────────────────────────────────────────────
